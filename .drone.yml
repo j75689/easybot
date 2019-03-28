@@ -1,0 +1,19 @@
+kind: pipeline
+name: build
+
+steps:
+  - name: frontend
+    image: node
+    commands:
+      - cd dashboard
+      - npm install
+      - npm run build
+
+  - name: backend
+    image: golang
+    commands:
+      - go get github.com/GeertJohan/go.rice/rice
+      - cd server
+      - rice embed-go
+      - cd ..
+      - go build
