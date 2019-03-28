@@ -1,7 +1,7 @@
 package server
 
 import (
-	"easybot/pkg/util"
+	"github.com/j75689/easybot/pkg/util"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

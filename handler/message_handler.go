@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"easybot/config"
-	"easybot/pkg/logger"
+	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/pkg/logger"
 	"sync"
 
 	"github.com/line/line-bot-sdk-go/linebot"

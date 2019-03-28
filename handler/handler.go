@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"easybot/config"
-	"easybot/pkg/logger"
-	"easybot/pkg/util"
-	"easybot/plugin"
 	"sync"
+
+	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/pkg/logger"
+	"github.com/j75689/easybot/pkg/util"
+	"github.com/j75689/easybot/plugin"
 
 	"github.com/fatih/structs"
 

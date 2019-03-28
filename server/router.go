@@ -1,8 +1,8 @@
 package server
 
 import (
-	"easybot/config"
-	"easybot/pkg/util"
+	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/pkg/util"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"

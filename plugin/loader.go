@@ -2,8 +2,8 @@ package plugin
 
 import (
 	"fmt"
-	"easybot/config"
-	"easybot/pkg/logger"
+	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/pkg/logger"
 	"io/ioutil"
 	"os"
 	"plugin"

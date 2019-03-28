@@ -3,7 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
-	"easybot/pkg/util"
+	"github.com/j75689/easybot/pkg/util"
 
 	"github.com/machinebox/graphql"
 	"go.uber.org/zap"

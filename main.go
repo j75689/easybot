@@ -1,6 +1,6 @@
 package main
 
-import "easybot/server"
+import "github.com/j75689/easybot/server"
 
 var (
 	version string

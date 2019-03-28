@@ -1,7 +1,7 @@
 package server
 
 import (
-	"easybot/config"
+	"github.com/j75689/easybot/config"
 	"io/ioutil"
 	"plugin"
 	"strings"

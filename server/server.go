@@ -1,8 +1,8 @@
 package server
 
 import (
-	"easybot/config"
-	"easybot/plugin"
+	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/plugin"
 	"fmt"
 	"os"
 	"strconv"
