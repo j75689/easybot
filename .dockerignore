@@ -1,0 +1,13 @@
+/go.sum
+/dev.sh
+/logs/
+/*.db
+/data/*.db
+/easybot/logs/
+/easybot/*.db
+/plugins/
+/.DS_Store
+/dashboard/node_modules
+/dashboard/package-lock.json
+/dashboard/build
+/.vscode/

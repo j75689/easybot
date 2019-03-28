@@ -1,0 +1,9 @@
+{
+  "input": {
+    "target": "${##URL##:target}",
+    "value": "%E6%B8%AC%E8%A9%A6"
+  },
+  "variables": {
+    "target": "測試"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "input": {
+    "apiURL": "http://127.0.0.1:8080/graphql",
+    "query": "query checkLine($lineID:String){checkLineIDUser(lineID:$lineID){success message debuglog}}",
+    "variables": {
+      "lineID": "test"
+    },
+    "output": {
+      "isLineUser": "checkLineIDUser.success",
+      "debuglog": "checkLineIDUser.debuglog"
+    }
+  },
+  "variables": {}
+}
