@@ -7,9 +7,7 @@ steps:
     commands:
       - cd dashboard
       - npm install
-      - npm run build
-    environment:
-      CI: false
+      - CI=false npm run build
 
   - name: backend
     image: golang

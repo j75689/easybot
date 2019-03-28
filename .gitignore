@@ -3,11 +3,12 @@
 /logs/
 /*.db
 /data/
-/easybot/logs/
-/easybot/*.db
+/easybot
+/easybot.exe
 /plugins/
 /.DS_Store
 /dashboard/node_modules
 /dashboard/package-lock.json
 /dashboard/build
 /.vscode/
+/server/rice-box.go

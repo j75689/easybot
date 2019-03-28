@@ -2,9 +2,9 @@
 /dev.sh
 /logs/
 /*.db
-/data/*.db
-/easybot/logs/
-/easybot/*.db
+/data/
+/easybot
+/easybot.exe
 /plugins/
 /.DS_Store
 /dashboard/node_modules
