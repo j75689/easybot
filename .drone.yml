@@ -8,6 +8,8 @@ steps:
       - cd dashboard
       - npm install
       - npm run build
+    environment:
+      CI: false
 
   - name: backend
     image: golang
@@ -17,3 +19,6 @@ steps:
       - rice embed-go
       - cd ..
       - go build
+    environment:
+      CGO_ENABLED: 0
+      GO111MODULE: on
