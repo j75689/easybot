@@ -7,11 +7,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/fatih/structs"
+
 	"github.com/j75689/easybot/plugin"
 
 	"github.com/j75689/easybot/config"
 	messagehandler "github.com/j75689/easybot/handler"
-	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/util"
 
 	rice "github.com/GeertJohan/go.rice"
@@ -179,25 +180,25 @@ func handleCRUDConfig(c *gin.Context) {
 }
 
 func handleTestRunner(c *gin.Context) {
-	type args struct {
-		Message   string                 `json:"message"`
-		Variables map[string]interface{} `json:"variables"`
-	}
+
 	defer c.Done()
 	postdata, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		logger.Error(err)
 		return
 	}
-	var arg args
+	var arg linebot.Event
 	err = json.Unmarshal(postdata, &arg)
 	if err != nil {
 		logger.Error(err)
 	}
-	logger.Debug(arg)
-	// reply := handleTextMessage(arg.Message, &arg.Variables)
+	logger.Debug(structs.Map(arg))
+	reply, err := messagehandler.Execute(&arg)
+	if err != nil {
+		logger.Debug(err)
+	}
 
-	// c.JSON(200, reply)
+	c.JSON(200, reply)
 }
 
 func handleTestPlugin(c *gin.Context) {

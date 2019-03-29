@@ -15,7 +15,7 @@ var (
 )
 
 // NewLogger instance
-func NewLogger(appName, loggerPath, loggerLevel string) {
+func NewLogger(appName, loggerPath, loggerLevel string) *zap.SugaredLogger {
 
 	// setting logger
 	{
@@ -78,6 +78,8 @@ func NewLogger(appName, loggerPath, loggerLevel string) {
 		defaultlogger := zap.New(core, development, caller)
 		logger = defaultlogger.Sugar()
 	}
+
+	return logger
 }
 
 // GetLogger get logger instance

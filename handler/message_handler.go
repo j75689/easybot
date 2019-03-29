@@ -19,7 +19,7 @@ type TextMatcher struct {
 }
 
 func (m *TextMatcher) Add(cfg *config.MessageHandlerConfig) {
-	match := cfg.Match.([]string)
+	match := cfg.Match.([]interface{})
 	for _, target := range match {
 		(*m).store.Store(target, cfg)
 	}
@@ -120,6 +120,7 @@ type MessageHandler struct {
 func (h *MessageHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err error) {
 	h.BaseHandler.RegisterConfig(cfg)
 	if matcher := h.MessageTypeMapper[linebot.MessageType(cfg.MessageType)]; matcher != nil {
+
 		matcher.Add(cfg)
 	}
 	return
@@ -151,7 +152,7 @@ func (h *MessageHandler) Run(event *linebot.Event, variables map[string]interfac
 }
 
 func (h *MessageHandler) handleTextMessage(message string, variables *map[string]interface{}) (reply *config.CustomMessage, err error) {
-	if cfg := h.MessageTypeMapper["text"].Find(message); cfg != nil {
+	if cfg := h.MessageTypeMapper[linebot.MessageTypeText].Find(message); cfg != nil {
 		// 塞入預設變數值
 		for k, v := range cfg.DefaultValues {
 			(*variables)[k] = v

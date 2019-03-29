@@ -1,0 +1,19 @@
+{
+  "id": "Example",
+  "eventType": "message",
+  "messageType": "text",
+  "match": ["Hello", "hello", "Hello!", "hello!"],
+  "timeout": 120,
+  "defaultValues": {
+    "repo": "https://github.com/j75689/easybot"
+  },
+  "stage": [
+    {
+      "type": "reply",
+      "value": {
+        "type": "text",
+        "text": "Hello! I'm EasyBot. ${repo}"
+      }
+    }
+  ]
+}

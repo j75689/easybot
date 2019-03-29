@@ -7,10 +7,11 @@ import (
 
 	"github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/plugin"
+	"go.uber.org/zap"
 
 	"github.com/j75689/easybot/config"
 
-	"github.com/j75689/easybot/pkg/logger"
+	log "github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/store"
 )
 
@@ -29,7 +30,8 @@ var (
 	loggerLevel    = os.Getenv("LOG_LEVEL")
 	loggerPath     = os.Getenv("LOG_PATH")
 
-	db store.Storage
+	logger *zap.SugaredLogger
+	db     store.Storage
 )
 
 func initServer() {
@@ -58,9 +60,9 @@ func initServer() {
 		loggerPath = "./logs/"
 	}
 	// init logger
-	logger.NewLogger(appName, loggerPath, loggerLevel)
+	logger = log.NewLogger(appName, loggerPath, loggerLevel)
 	// init plugin
-	plugin.Load(plugin_path, logger.GetLogger())
+	plugin.Load(plugin_path, log.GetLogger())
 
 	logger.Info("init db")
 	// init db
@@ -74,14 +76,18 @@ func initServer() {
 	}
 	logger.Info("init config")
 	// init config
-	db.LoadAll(func(key string, value interface{}) {
+	if err = db.LoadAll(func(key string, value interface{}) {
 		if b, err := json.Marshal(value); err == nil {
-			var cfg *config.MessageHandlerConfig
-			if err = json.Unmarshal(b, cfg); err == nil {
-				handler.RegisterConfig(cfg)
+			var cfg config.MessageHandlerConfig
+			if err = json.Unmarshal(b, &cfg); err == nil {
+				handler.RegisterConfig(&cfg)
+			} else {
+				logger.Errorf("Unmarshal config [%s] error: %v", key, err)
 			}
 		}
-	})
+	}); err != nil {
+		logger.Error(err)
+	}
 }
 
 // Start 啟動服務
