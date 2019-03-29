@@ -1,10 +1,5 @@
 package config
 
-import "go.uber.org/zap"
-
-// PluginFunc 統一插件進入點
-type PluginFunc func(interface{}, map[string]interface{}, *zap.SugaredLogger) (map[string]interface{}, error)
-
 // MessageHandlerConfig 處理傳入訊息的設定
 type MessageHandlerConfig struct {
 	ID            string            `json:"id"`

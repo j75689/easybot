@@ -1,13 +1,18 @@
 package server
 
 import (
-	"github.com/j75689/easybot/config"
-	"github.com/j75689/easybot/pkg/util"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/j75689/easybot/plugin"
+
+	"github.com/j75689/easybot/config"
+	messagehandler "github.com/j75689/easybot/handler"
+	"github.com/j75689/easybot/pkg/logger"
+	"github.com/j75689/easybot/pkg/util"
 
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/foolin/gin-template/supports/gorice"
@@ -17,12 +22,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/line/line-bot-sdk-go/linebot/httphandler"
-	"go.uber.org/zap"
-
-	bolt "go.etcd.io/bbolt"
 )
 
-func initRouter(isDebug *bool) (router *gin.Engine) {
+func initRouter() (router *gin.Engine) {
 	gin.SetMode(gin.ReleaseMode)
 
 	router = gin.New()
@@ -64,11 +66,10 @@ func initRouter(isDebug *bool) (router *gin.Engine) {
 	router.Any("/config/:id", handleCRUDConfig)
 
 	// Tester
-	if *isDebug {
-		router.Any("/debug/runner", handleTestRunner)
-		router.Any("/debug/plugin/:plugin", handleTestPlugin)
-		router.Any("/debug/request", handleTestRequest)
-	}
+
+	router.Any("/debug/runner", handleTestRunner)
+	router.Any("/debug/plugin/:plugin", handleTestPlugin)
+	router.Any("/debug/request", handleTestRequest)
 
 	return
 }
@@ -84,7 +85,7 @@ func handleIndexPage(c *gin.Context) {
 
 func newLineHookHandler() (handler *httphandler.WebhookHandler) {
 	// Line SDK
-	handler, err := httphandler.New(
+	webhandler, err := httphandler.New(
 		channel_secret,
 		channel_token,
 	)
@@ -94,16 +95,19 @@ func newLineHookHandler() (handler *httphandler.WebhookHandler) {
 	}
 
 	// Setup HTTP Server for receiving requests from LINE platform
-	handler.HandleEvents(func(events []*linebot.Event, r *http.Request) {
+	webhandler.HandleEvents(func(events []*linebot.Event, r *http.Request) {
 
 		logger.Info(r)
 
-		bot, err := handler.NewClient()
+		bot, err := webhandler.NewClient()
 		if err != nil {
 			logger.Error(err)
 		}
 		for _, event := range events {
-			if msg := handleMessage(event.Source, event.Message); msg != nil {
+			if msg, err := messagehandler.Execute(event); msg != nil {
+				if err != nil {
+					logger.Warn(err)
+				}
 				msgData, _ := msg.MarshalJSON()
 				logger.Debug(string(msgData))
 				if _, err = bot.ReplyMessage(event.ReplyToken, msg).Do(); err != nil {
@@ -118,79 +122,57 @@ func newLineHookHandler() (handler *httphandler.WebhookHandler) {
 
 func handleCRUDConfig(c *gin.Context) {
 	var (
-		bucketName = "easybot.config"
-		configID   = c.Param("id")
+		configID = c.Param("id")
 	)
 
 	switch c.Request.Method {
 	case "GET":
+		if config, err := db.Load(configID); err == nil {
+			c.JSON(200, config)
+		} else {
+			c.JSON(200, map[string]string{"error": err.Error()})
+		}
 
-		db.Batch(func(tx *bolt.Tx) error {
-			b, err := tx.CreateBucketIfNotExists([]byte(bucketName))
-			if err != nil {
-				logger.Errorf("open bucket: %s", err)
-			}
-			v := b.Get([]byte(configID))
-			if v != nil {
-				var config map[string]interface{}
-				json.Unmarshal(v, &config)
-				c.JSON(200, config)
-			} else {
-				c.JSON(200, map[string]string{"error": "Config Not Found"})
-			}
-
-			return nil
-		})
 	case "POST":
-		db.Update(func(tx *bolt.Tx) error {
-			b, err := tx.CreateBucketIfNotExists([]byte(bucketName))
-			if err != nil {
-				logger.Errorf("open bucket: %s", err)
-				return err
-			}
-			if configData, err := c.GetRawData(); err == nil {
-				err = registerMessageHandlerConfig(configID, configData)
-				if err != nil {
-					logger.Errorf("register config [%s]: %s", configID, err)
-					c.JSON(200, map[string]string{"error": err.Error()})
-					return err
+		if configData, err := c.GetRawData(); err == nil {
+			var messageConfig config.MessageHandlerConfig
+			if err = json.Unmarshal(configData, &messageConfig); err == nil {
+				if err = db.Save(messageConfig.ID, messageConfig); err != nil {
+					logger.Errorf("Save config [%s] error: %s", messageConfig.ID, err.Error())
+				} else {
+					messagehandler.RegisterConfig(&messageConfig)
+					c.JSON(200, map[string]string{"message": "success."})
 				}
-				err = b.Put([]byte(configID), configData)
-				if err != nil {
-					logger.Errorf("save config [%s]: %s", configID, err)
-					return err
-				}
-
-				logger.Infof("save config [%s] success.", configID)
+			} else {
+				c.JSON(200, map[string]string{"error": "invalid config."})
 			}
 
-			return nil
-		})
+		} else {
+			c.JSON(200, map[string]string{"error": err.Error()})
+		}
 	case "DELETE":
-		db.Update(func(tx *bolt.Tx) error {
-			b, err := tx.CreateBucketIfNotExists([]byte(bucketName))
-			if err != nil {
-				logger.Errorf("open bucket: %s", err)
-				return err
-			}
-
-			v := b.Get([]byte(configID))
-			if v != nil {
-				var messageConfig config.MessageHandlerConfig
-				err = json.Unmarshal(v, &messageConfig)
-				if err == nil {
-					unregisterMessageHandlerConfig(&messageConfig)
+		if data, err := db.Load(configID); err == nil {
+			var messageConfig config.MessageHandlerConfig
+			if b, err := json.Marshal(data); err == nil {
+				if err = json.Unmarshal(b, &messageConfig); err != nil {
+					logger.Error(err.Error())
+				} else {
+					if err = messagehandler.DeregisterConfig(&messageConfig); err != nil {
+						logger.Error(err.Error())
+					}
 				}
 			}
 
-			err = b.Delete([]byte(configID))
-			if err != nil {
-				logger.Errorf("delete config [%s] failed.", configID)
-				return err
-			}
-			logger.Infof("delete config [%s] success.", configID)
-			return nil
-		})
+		} else {
+			c.JSON(200, map[string]string{"error": err.Error()})
+			return
+		}
+		if err := db.Delete(configID); err != nil {
+			logger.Errorf("Delete config [%s] error: %s", configID, err.Error())
+			c.JSON(200, map[string]string{"error": err.Error()})
+		} else {
+			c.JSON(200, map[string]string{"message": "success."})
+		}
 	default:
 		c.JSON(405, map[string]string{"error": "Method Not Allowed."})
 	}
@@ -213,9 +195,9 @@ func handleTestRunner(c *gin.Context) {
 		logger.Error(err)
 	}
 	logger.Debug(arg)
-	reply := handleTextMessage(arg.Message, &arg.Variables)
+	// reply := handleTextMessage(arg.Message, &arg.Variables)
 
-	c.JSON(200, reply)
+	// c.JSON(200, reply)
 }
 
 func handleTestPlugin(c *gin.Context) {
@@ -223,44 +205,37 @@ func handleTestPlugin(c *gin.Context) {
 		pluginName = c.Param("plugin")
 	)
 	defer c.Done()
-	if f, ok := pluginfuncs.Load(pluginName); ok {
-		plugin := f.(*config.PluginFunc)
 
-		type args struct {
-			Input     interface{}            `json:"input"`
-			Variables map[string]interface{} `json:"variables"`
-			logger    *zap.SugaredLogger
-		}
+	type args struct {
+		Input     interface{}            `json:"input"`
+		Variables map[string]interface{} `json:"variables"`
+	}
 
-		postdata, err := ioutil.ReadAll(c.Request.Body)
-		if err != nil {
-			logger.Error(err)
-			return
-		}
+	postdata, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		logger.Error(err)
+		return
+	}
 
-		var arg = args{
-			logger: logger,
-		}
-		err = json.Unmarshal(postdata, &arg)
-		if err != nil {
-			logger.Error(err)
-		}
-		logger.Debug(arg)
-		var b []byte
-		if b, err = json.Marshal(arg.Input); err != nil {
-			logger.Error(err.Error())
-		}
-		ParamData := util.ReplaceVariables(string(b), arg.Variables)
-		if err = json.Unmarshal([]byte(ParamData), &arg.Input); err != nil {
-			logger.Error(err.Error())
-		}
-		v, err := (*plugin)(arg.Input, arg.Variables, arg.logger)
-		if err != nil {
-			c.JSON(200, map[string]interface{}{"error": err.Error()})
-		} else {
-			c.JSON(200, v)
-		}
-
+	var arg = args{}
+	err = json.Unmarshal(postdata, &arg)
+	if err != nil {
+		logger.Error(err)
+	}
+	logger.Debug(arg)
+	var b []byte
+	if b, err = json.Marshal(arg.Input); err != nil {
+		logger.Error(err.Error())
+	}
+	ParamData := util.ReplaceVariables(string(b), arg.Variables)
+	if err = json.Unmarshal([]byte(ParamData), &arg.Input); err != nil {
+		logger.Error(err.Error())
+	}
+	v, _, err := plugin.Excute(pluginName, arg.Input, arg.Variables)
+	if err != nil {
+		c.JSON(200, map[string]interface{}{"error": err.Error()})
+	} else {
+		c.JSON(200, v)
 	}
 
 }

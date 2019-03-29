@@ -10,17 +10,12 @@ import (
 )
 
 var (
-	appName       = "easybot"
-	loggerLevel   = os.Getenv("LOG_LEVEL")
-	loggerPath    = os.Getenv("LOG_PATH")
 	defaultlogger *zap.Logger
 	logger        *zap.SugaredLogger
 )
 
-func init() {
-	if loggerPath == "" {
-		loggerPath = "./logs/"
-	}
+// NewLogger instance
+func NewLogger(appName, loggerPath, loggerLevel string) {
 
 	// setting logger
 	{

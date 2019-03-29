@@ -2,10 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/j75689/easybot/config"
-	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/util"
 	"github.com/j75689/easybot/plugin"
 
@@ -32,16 +32,32 @@ func init() {
 	handlers[linebot.EventTypeThings] = nil
 }
 
-// Excute 執行
-func Excute(event linebot.Event) (reply *config.CustomMessage) {
+// RegisterConfig to Handler
+func RegisterConfig(cfg *config.MessageHandlerConfig) error {
+	if handler := handlers[linebot.EventType(cfg.EventType)]; handler != nil {
+		return handler.RegisterConfig(cfg)
+	}
+	return fmt.Errorf("eventType:[%s] handler not found.", cfg.EventType)
+}
+
+// DeregisterConfig from Handler
+func DeregisterConfig(cfg *config.MessageHandlerConfig) error {
+
+	if handler := handlers[linebot.EventType(cfg.EventType)]; handler != nil {
+		return handler.DeregisterConfig(cfg.ID)
+	}
+	return fmt.Errorf("eventType:[%s] handler not found.", cfg.EventType)
+}
+
+// Excute Function
+func Execute(event *linebot.Event) (reply *config.CustomMessage, err error) {
 	var (
 		variables = make(map[string]interface{})
 	)
 	variables["event"] = structs.Map(event)
 
 	if handler := handlers[event.Type]; handler != nil {
-
-		reply = handler.Run(event, variables)
+		reply, err = handler.Run(event, variables)
 	}
 	return
 }
@@ -51,7 +67,7 @@ type Handler interface {
 	GetConfig(string) *config.MessageHandlerConfig
 	RegisterConfig(*config.MessageHandlerConfig) error
 	DeregisterConfig(string) error
-	Run(linebot.Event, map[string]interface{}) *config.CustomMessage
+	Run(*linebot.Event, map[string]interface{}) (*config.CustomMessage, error)
 }
 
 // BaseHandler basic implement
@@ -81,25 +97,21 @@ func (h *BaseHandler) Run(event linebot.Event, variables map[string]interface{})
 }
 
 func (h *BaseHandler) runStage(id string, stageConfig []*config.StageConfig, variables map[string]interface{}) (reply string, err error) {
-	for idx, stage := range stageConfig {
+	for _, stage := range stageConfig {
 		switch stage.Type {
 		case "action":
-
+			var (
+				b         []byte
+				Parameter interface{}
+				next      bool
+			)
 			// 取代參數中的變數值
-			var b []byte
-			if b, err = json.Marshal(stage.Parameter); err != nil {
-				logger.Errorw(err.Error(), "id", id, "stage", idx, "type", stage.Type, "plugin", stage.Plugin)
-			}
+			b, _ = json.Marshal(stage.Parameter)
 			ParamData := util.ReplaceVariables(string(b), variables)
-			var Parameter interface{}
-			if err = json.Unmarshal([]byte(ParamData), &Parameter); err != nil {
-				logger.Errorw(err.Error(), "id", id, "stage", idx, "type", stage.Type, "plugin", stage.Plugin)
-			}
+			json.Unmarshal([]byte(ParamData), &Parameter)
 			// 執行
-			variables, err = plugin.Excute(stage.Plugin, Parameter, variables)
-			if err != nil {
-				logger.Errorw(err.Error(), "id", id, "stage", idx, "type", stage.Type, "plugin", stage.Plugin)
-				// Stage 執行失敗，切換到Failed執行的階段
+			variables, next, err = plugin.Excute(stage.Plugin, Parameter, variables)
+			if !next {
 				if stage.Failed != nil {
 					reply, err = h.runStage(id, stage.Failed, variables)
 					return
@@ -107,10 +119,8 @@ func (h *BaseHandler) runStage(id string, stageConfig []*config.StageConfig, var
 			}
 
 		case "reply":
-			b, err := json.Marshal(stage.Value)
-			if err != nil {
-				logger.Errorw(err.Error(), "id", id, "stage", idx, "type", stage.Type)
-			}
+			var b []byte
+			b, err = json.Marshal(stage.Value)
 			reply = util.ReplaceVariables(string(b), variables)
 
 		}

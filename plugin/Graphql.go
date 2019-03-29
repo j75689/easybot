@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/j75689/easybot/pkg/util"
 
 	"github.com/machinebox/graphql"
@@ -16,9 +17,12 @@ type GraphqlPluginConfig struct {
 	Output    map[string]string      `json:"output"`
 }
 
-func Graphql(input interface{}, variables map[string]interface{}, logger *zap.SugaredLogger) (map[string]interface{}, error) {
+func Graphql(input interface{}, variables map[string]interface{}, logger *zap.SugaredLogger) (map[string]interface{}, bool, error) {
 	logger.Info("Excute Graphql Plugin")
-	var config GraphqlPluginConfig
+	var (
+		config GraphqlPluginConfig
+		next   = true
+	)
 	param, err := json.Marshal(input)
 
 	if err != nil {
@@ -29,7 +33,7 @@ func Graphql(input interface{}, variables map[string]interface{}, logger *zap.Su
 	err = json.Unmarshal(param, &config)
 	if err != nil {
 		logger.Error(err)
-		return nil, err
+		return nil, next, err
 	}
 
 	logger.Debug(config)
@@ -57,5 +61,5 @@ func Graphql(input interface{}, variables map[string]interface{}, logger *zap.Su
 	}
 
 	logger.Debug(resp)
-	return variables, err
+	return variables, next, err
 }

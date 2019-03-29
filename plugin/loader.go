@@ -2,10 +2,7 @@ package plugin
 
 import (
 	"fmt"
-	"github.com/j75689/easybot/config"
-	"github.com/j75689/easybot/pkg/logger"
 	"io/ioutil"
-	"os"
 	"plugin"
 	"strings"
 	"sync"
@@ -14,27 +11,25 @@ import (
 )
 
 // PluginFunc 統一插件進入點
-type PluginFunc func(interface{}, map[string]interface{}, *zap.SugaredLogger) (map[string]interface{}, error)
+type PluginFunc func(interface{}, map[string]interface{}, *zap.SugaredLogger) (map[string]interface{}, bool, error)
 
 var (
 	pluginfuncs = &sync.Map{}
-	pluginPath  = os.Getenv("PLUGIN_PATH")
+	logger      *zap.SugaredLogger
 )
 
-func init() {
-	if pluginPath == "" {
-		pluginPath = "./plugin"
-	}
+func Load(path string, log *zap.SugaredLogger) {
+	logger = log
 	logger.Info("load plugin")
 	// add default plugin
 	{
-		graphql := config.PluginFunc(Graphql)
+		graphql := PluginFunc(Graphql)
 		pluginfuncs.Store("Graphql", &graphql)
-		equal := config.PluginFunc(Equal)
+		equal := PluginFunc(Equal)
 		pluginfuncs.Store("Equal", &equal)
 	}
 	// load addition plugin
-	load(pluginPath)
+	load(path)
 }
 
 // load all .so plugin file
@@ -77,8 +72,8 @@ func load(path string) {
 				continue
 			}
 
-			if f, ok := function.(func(interface{}, map[string]interface{}, *zap.SugaredLogger) (map[string]interface{}, error)); ok {
-				ff := config.PluginFunc(f)
+			if f, ok := function.(func(interface{}, map[string]interface{}, *zap.SugaredLogger) (map[string]interface{}, bool, error)); ok {
+				ff := PluginFunc(f)
 				pluginfuncs.Store(runFuncName, &ff)
 			} else {
 				logger.Errorf("load plugin [%s] failed.\n", runFuncName)
@@ -89,11 +84,11 @@ func load(path string) {
 }
 
 // Excute plugin
-func Excute(pluginName string, input interface{}, variables map[string]interface{}) (map[string]interface{}, error) {
+func Excute(pluginName string, input interface{}, variables map[string]interface{}) (map[string]interface{}, bool, error) {
 	if v, ok := pluginfuncs.Load(pluginName); ok {
 		// 執行
 		plugin := v.(*PluginFunc)
-		return (*plugin)(input, variables, logger.GetLogger())
+		return (*plugin)(input, variables, logger)
 	}
-	return variables, fmt.Errorf("plugin [%s] not found.\n", pluginName)
+	return variables, true, fmt.Errorf("plugin [%s] not found.\n", pluginName)
 }

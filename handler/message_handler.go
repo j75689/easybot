@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/j75689/easybot/config"
-	"github.com/j75689/easybot/pkg/logger"
 	"sync"
+
+	"github.com/j75689/easybot/config"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )
@@ -113,13 +113,13 @@ func (m *StickerMatcher) Find(message interface{}) (cfg *config.MessageHandlerCo
 // MessageHandler struct
 type MessageHandler struct {
 	BaseHandler
-	Event             string
-	MessageTypeMapper map[string]Matcher
+	Event             linebot.EventType
+	MessageTypeMapper map[linebot.MessageType]Matcher
 }
 
 func (h *MessageHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err error) {
 	h.BaseHandler.RegisterConfig(cfg)
-	if matcher := h.MessageTypeMapper[cfg.MessageType]; matcher != nil {
+	if matcher := h.MessageTypeMapper[linebot.MessageType(cfg.MessageType)]; matcher != nil {
 		matcher.Add(cfg)
 	}
 	return
@@ -128,17 +128,17 @@ func (h *MessageHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err e
 func (h *MessageHandler) DeregisterConfig(id string) (err error) {
 	h.BaseHandler.DeregisterConfig(id)
 	if cfg := h.GetConfig(id); cfg != nil {
-		if matcher := h.MessageTypeMapper[cfg.MessageType]; matcher != nil {
+		if matcher := h.MessageTypeMapper[linebot.MessageType(cfg.MessageType)]; matcher != nil {
 			matcher.Remove(cfg)
 		}
 	}
 	return
 }
 
-func (h *MessageHandler) Run(event linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage) {
+func (h *MessageHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage, err error) {
 	switch message := event.Message.(type) {
 	case *linebot.TextMessage:
-		h.handleTextMessage(message.Text, &variables)
+		reply, err = h.handleTextMessage(message.Text, &variables)
 	// not implement
 	case *linebot.VideoMessage:
 	case *linebot.ImageMessage:
@@ -150,17 +150,14 @@ func (h *MessageHandler) Run(event linebot.Event, variables map[string]interface
 	return
 }
 
-func (h *MessageHandler) handleTextMessage(message string, variables *map[string]interface{}) (reply *config.CustomMessage) {
-	logger.Debug(message, *variables)
+func (h *MessageHandler) handleTextMessage(message string, variables *map[string]interface{}) (reply *config.CustomMessage, err error) {
 	if cfg := h.MessageTypeMapper["text"].Find(message); cfg != nil {
 		// 塞入預設變數值
 		for k, v := range cfg.DefaultValues {
 			(*variables)[k] = v
 		}
-		replyStr, err := h.runStage(cfg.ID, cfg.Stage, (*variables))
-		if err != nil {
-			logger.Errorw(err.Error(), "id", cfg.ID)
-		}
+		var replyStr string
+		replyStr, err = h.runStage(cfg.ID, cfg.Stage, (*variables))
 		reply = &config.CustomMessage{
 			Msg: replyStr,
 		}
@@ -174,27 +171,27 @@ func newMessageHandler() *MessageHandler {
 		BaseHandler: BaseHandler{
 			Configs: &sync.Map{},
 		},
-		Event: "message",
-		MessageTypeMapper: map[string]Matcher{
-			"text": &TextMatcher{
+		Event: linebot.EventTypeMessage,
+		MessageTypeMapper: map[linebot.MessageType]Matcher{
+			linebot.MessageTypeText: &TextMatcher{
 				store: &sync.Map{},
 			},
-			"image": &ImageMatcher{
+			linebot.MessageTypeImage: &ImageMatcher{
 				store: &sync.Map{},
 			},
-			"video": &VideoMatcher{
+			linebot.MessageTypeVideo: &VideoMatcher{
 				store: &sync.Map{},
 			},
-			"audio": &AudioMatcher{
+			linebot.MessageTypeAudio: &AudioMatcher{
 				store: &sync.Map{},
 			},
-			"file": &FileMatcher{
+			linebot.MessageTypeFile: &FileMatcher{
 				store: &sync.Map{},
 			},
-			"location": &LocationMatcher{
+			linebot.MessageTypeLocation: &LocationMatcher{
 				store: &sync.Map{},
 			},
-			"sticker": &StickerMatcher{
+			linebot.MessageTypeSticker: &StickerMatcher{
 				store: &sync.Map{},
 			},
 		},
