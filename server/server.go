@@ -45,7 +45,7 @@ func initServer() {
 		plugin_path = "./plugin"
 	}
 	if db_path == "" {
-		db_path = "./data/easybot.db"
+		db_path = "./data/" + appName + ".db"
 	}
 	if db_driver == "" {
 		db_driver = "bolt"

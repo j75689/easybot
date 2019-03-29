@@ -35,7 +35,7 @@ func initRouter() (router *gin.Engine) {
 	//router.LoadHTMLGlob("./dashboard/build/index.html")
 	router.HTMLRender = gorice.New(rice.MustFindBox("../dashboard/build"))
 	// Session
-	store := cookie.NewStore([]byte("easybot"))
+	store := cookie.NewStore([]byte(appName))
 	router.Use(sessions.Sessions("session", store))
 
 	// LineBot Hook
