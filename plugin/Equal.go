@@ -7,8 +7,8 @@ import (
 )
 
 type EqualPluginConfig struct {
-	Target string `json:"target"`
-	Value  string `json:"value"`
+	Target interface{} `json:"target"`
+	Value  interface{} `json:"value"`
 }
 
 func Equal(input interface{}, variables map[string]interface{}, logger *zap.SugaredLogger) (map[string]interface{}, bool, error) {

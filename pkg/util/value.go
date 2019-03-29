@@ -21,17 +21,12 @@ func ReplaceVariables(reply string, variables map[string]interface{}) string {
 		}
 
 		if v := GetJSONValue(match[1], variables); v != nil {
-			switch val := v.(type) {
-			case string:
-				if handleURLEncode {
-					val = url.QueryEscape(val)
-				}
-				reply = strings.Replace(reply, match[0], val, -1)
-			case bool:
-				reply = strings.Replace(reply, match[0], fmt.Sprintf("%t", val), -1)
-			case interface{}:
-				reply = strings.Replace(reply, match[0], fmt.Sprintf("%v", val), -1)
+			val := fmt.Sprintf("%v", v)
+			if handleURLEncode {
+				val = url.QueryEscape(val)
 			}
+			reply = strings.Replace(reply, match[0], val, -1)
+
 		}
 	}
 
@@ -45,7 +40,7 @@ func GetJSONValue(path string, data map[string]interface{}) interface{} {
 }
 
 func getValue(layer []string, data interface{}) interface{} {
-	if len(layer) <= 1 || data == nil {
+	if len(layer) <= 0 || data == nil {
 		return data
 	}
 

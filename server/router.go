@@ -231,12 +231,13 @@ func handleTestPlugin(c *gin.Context) {
 	if err = json.Unmarshal([]byte(ParamData), &arg.Input); err != nil {
 		logger.Error(err.Error())
 	}
-	v, _, err := plugin.Excute(pluginName, arg.Input, arg.Variables)
-	if err != nil {
-		c.JSON(200, map[string]interface{}{"error": err.Error()})
-	} else {
-		c.JSON(200, v)
-	}
+	v, next, err := plugin.Excute(pluginName, arg.Input, arg.Variables)
+
+	c.JSON(200, map[string]interface{}{
+		"variables": v,
+		"next":      next,
+		"error":     err,
+	})
 
 }
 
