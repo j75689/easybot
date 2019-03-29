@@ -86,7 +86,7 @@ func handleIndexPage(c *gin.Context) {
 
 func newLineHookHandler() (handler *httphandler.WebhookHandler) {
 	// Line SDK
-	webhandler, err := httphandler.New(
+	handler, err := httphandler.New(
 		channel_secret,
 		channel_token,
 	)
@@ -96,11 +96,11 @@ func newLineHookHandler() (handler *httphandler.WebhookHandler) {
 	}
 
 	// Setup HTTP Server for receiving requests from LINE platform
-	webhandler.HandleEvents(func(events []*linebot.Event, r *http.Request) {
+	handler.HandleEvents(func(events []*linebot.Event, r *http.Request) {
 
 		logger.Info(r)
 
-		bot, err := webhandler.NewClient()
+		bot, err := handler.NewClient()
 		if err != nil {
 			logger.Error(err)
 		}
