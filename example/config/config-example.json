@@ -3,7 +3,7 @@
   "messageType": "TextMessage",
   "messageText": "我的行動借閱證",
   "defaultValues": {
-    "bindAcccountUrl": "https://rwdpac.cultural.pthg.gov.tw/"
+    "bindAcccountUrl": "https://example.com/"
   },
   "stage": [
     {
@@ -11,7 +11,7 @@
       "plugin": "curl",
       "paramType": "json",
       "parameter": {
-        "url": "https://rwdpac.cultural.pthg.gov.tw/api/graphql",
+        "url": "https://example.com/api/graphql",
         "header": [],
         "method": "POST",
         "data": "{\"operationName\":\"getMarcExportList\",\"variables\":{},\"query\":\"query getMarcExportList {\\n  getMarcExportList {\\n    success\\n    message\\n    marcExportList {\\n      id\\n      exporttype\\n      extension\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}",
