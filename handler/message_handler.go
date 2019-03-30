@@ -25,7 +25,7 @@ func (m *TextMatcher) Add(cfg *config.MessageHandlerConfig) {
 	}
 }
 func (m *TextMatcher) Remove(cfg *config.MessageHandlerConfig) {
-	match := cfg.Match.([]string)
+	match := cfg.Match.([]interface{})
 	for _, target := range match {
 		(*m).store.Delete(target)
 	}
@@ -127,12 +127,12 @@ func (h *MessageHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err e
 }
 
 func (h *MessageHandler) DeregisterConfig(id string) (err error) {
-	h.BaseHandler.DeregisterConfig(id)
 	if cfg := h.GetConfig(id); cfg != nil {
 		if matcher := h.MessageTypeMapper[linebot.MessageType(cfg.MessageType)]; matcher != nil {
 			matcher.Remove(cfg)
 		}
 	}
+	h.BaseHandler.DeregisterConfig(id)
 	return
 }
 

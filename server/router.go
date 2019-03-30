@@ -141,6 +141,7 @@ func handleCRUDConfig(c *gin.Context) {
 				if err = db.Save(messageConfig.ID, messageConfig); err != nil {
 					logger.Errorf("Save config [%s] error: %s", messageConfig.ID, err.Error())
 				} else {
+					logger.Infof("Register config [%s]", messageConfig.ID)
 					messagehandler.RegisterConfig(&messageConfig)
 					c.JSON(200, map[string]string{"message": "success."})
 				}
@@ -158,6 +159,7 @@ func handleCRUDConfig(c *gin.Context) {
 				if err = json.Unmarshal(b, &messageConfig); err != nil {
 					logger.Error(err.Error())
 				} else {
+					logger.Infof("Deregister config [%s]", messageConfig.ID)
 					if err = messagehandler.DeregisterConfig(&messageConfig); err != nil {
 						logger.Error(err.Error())
 					}
