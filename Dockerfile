@@ -22,5 +22,4 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /easybot
 COPY --from=build-env /go/src/easybot/easybotsvc /easybot/easybotsvc
 RUN chmod 777 easybotsvc
-EXPOSE 8801
-ENTRYPOINT ["./easybotsvc"]
+CMD ["./easybotsvc"]
