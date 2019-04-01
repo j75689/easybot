@@ -3,7 +3,6 @@
   "eventType": "message",
   "messageType": "text",
   "match": ["Hello", "hello", "Hello!", "hello!"],
-  "timeout": 120,
   "defaultValues": {
     "repo": "https://github.com/j75689/easybot"
   },
@@ -14,6 +13,12 @@
         "type": "text",
         "text": "Hello! I'm EasyBot. ${repo}"
       }
+    },
+    {
+      "type": "wait",
+      "messageType": "text",
+      "timeout": 120,
+      "output": {}
     }
   ]
 }

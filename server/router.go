@@ -98,13 +98,14 @@ func newLineHookHandler() (handler *httphandler.WebhookHandler) {
 	// Setup HTTP Server for receiving requests from LINE platform
 	handler.HandleEvents(func(events []*linebot.Event, r *http.Request) {
 
-		logger.Info(r)
+		logger.Debug(r)
 
 		bot, err := handler.NewClient()
 		if err != nil {
 			logger.Error(err)
 		}
 		for _, event := range events {
+			logger.Debug(structs.Map(event))
 			if msg, err := messagehandler.Execute(event); msg != nil {
 				if err != nil {
 					logger.Warn(err)

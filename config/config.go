@@ -7,15 +7,14 @@ type MessageHandlerConfig struct {
 	MessageType   string            `json:"messagetype,omitempty"`
 	DefaultValues map[string]string `json:"defaultValues"`
 	Match         interface{}       `json:"match,omitempty"`
-	TimeOut       int               `json:"timeout"`
 	Stage         []*StageConfig    `json:"stage"`
 }
 
 // StageConfig 處理的執行步驟
 type StageConfig struct {
-	Type      string         `json:"type"`
-	Plugin    string         `json:"plugin"`
-	Parameter interface{}    `json:"parameter"`
-	Value     interface{}    `json:"value"`
-	Failed    []*StageConfig `json:"failed"`
+	Type      string         `json:"type"` // reply,action,wait
+	Plugin    string         `json:"plugin,omitempty"`
+	Parameter interface{}    `json:"parameter,omitempty"`
+	Value     interface{}    `json:"value,omitempty"`
+	Failed    []*StageConfig `json:"failed,omitempty"`
 }

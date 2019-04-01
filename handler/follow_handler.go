@@ -16,16 +16,19 @@ type FollowHandler struct {
 func (h *FollowHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err error) {
 	h.DeregisterConfig(cfg.ID)
 
-	h.BaseHandler.RegisterConfig(cfg)
+	err = h.BaseHandler.RegisterConfig(cfg)
 	h.Config = cfg
 	return
 }
 
 func (h *FollowHandler) DeregisterConfig(id string) (err error) {
-	if id == h.Config.ID {
-		h.Config = nil
+	if h.Config != nil {
+		if id == h.Config.ID {
+			h.Config = nil
+		}
+		err = h.BaseHandler.DeregisterConfig(id)
 	}
-	h.BaseHandler.DeregisterConfig(id)
+
 	return
 }
 
