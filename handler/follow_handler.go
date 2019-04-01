@@ -39,7 +39,7 @@ func (h *FollowHandler) Run(event *linebot.Event, variables map[string]interface
 			variables[k] = v
 		}
 		var replyStr string
-		replyStr, err = h.runStage(h.Config.ID, h.Config.Stage, variables)
+		replyStr, err = h.runStage(h.Config.ID, 0, h.Config.Stage, variables)
 		reply = &config.CustomMessage{
 			Msg: replyStr,
 		}
@@ -52,6 +52,7 @@ func newFollowHandler() *FollowHandler {
 	return &FollowHandler{
 		BaseHandler: BaseHandler{
 			Configs: &sync.Map{},
+			Wating:  &sync.Map{},
 		},
 		Event:  linebot.EventTypeFollow,
 		Config: nil,

@@ -153,6 +153,11 @@ func (h *MessageHandler) Run(event *linebot.Event, variables map[string]interfac
 	case *linebot.LocationMessage:
 	case *linebot.StickerMessage:
 	}
+
+	if reply == nil { // find wating queuq
+		reply, err = h.BaseHandler.Run(event, variables)
+	}
+
 	return
 }
 
@@ -163,7 +168,7 @@ func (h *MessageHandler) handleTextMessage(message string, variables *map[string
 			(*variables)[k] = v
 		}
 		var replyStr string
-		replyStr, err = h.runStage(cfg.ID, cfg.Stage, (*variables))
+		replyStr, err = h.runStage(cfg.ID, 0, cfg.Stage, (*variables))
 		reply = &config.CustomMessage{
 			Msg: replyStr,
 		}
@@ -176,6 +181,7 @@ func newMessageHandler() *MessageHandler {
 	return &MessageHandler{
 		BaseHandler: BaseHandler{
 			Configs: &sync.Map{},
+			Wating:  &sync.Map{},
 		},
 		Event: linebot.EventTypeMessage,
 		MessageTypeMapper: map[linebot.MessageType]Matcher{

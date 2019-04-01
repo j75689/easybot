@@ -1,0 +1,58 @@
+{
+  "id": "MessageWaitExample",
+  "eventType": "message",
+  "messageType": "text",
+  "match": ["Wait", "wait"],
+  "defaultValues": {
+    "repo": "https://github.com/j75689/easybot"
+  },
+  "stage": [
+    {
+      "type": "wait",
+      "target": {
+        "eventType": "message",
+        "MessageType": "text"
+      },
+      "timeout": 60,
+      "prefunction": [
+        {
+          "type": "reply",
+          "value": {
+            "type": "text",
+            "text": "請輸入您的借閱證帳號"
+          }
+        }
+      ],
+      "extract": {
+        "usercode": "event.Message.Text"
+      }
+    },
+    {
+      "type": "wait",
+      "target": {
+        "eventType": "message",
+        "MessageType": "text"
+      },
+      "timeout": 60,
+      "prefunction": [
+        {
+          "type": "reply",
+          "value": {
+            "type": "text",
+            "text": "請輸入您的借閱證密碼"
+          }
+        }
+      ],
+      "extract": {
+        "userpass": "event.Message.Text"
+      }
+    },
+    {
+      "type": "reply",
+      "value": {
+        "type": "text",
+        "text": "input1:${usercode}, input2:${userpass}"
+      }
+    }
+  ]
+}

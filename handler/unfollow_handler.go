@@ -22,10 +22,13 @@ func (h *UnfollowHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err 
 }
 
 func (h *UnfollowHandler) DeregisterConfig(id string) (err error) {
-	if id == h.Config.ID {
-		h.Config = nil
+	if h.Config != nil {
+		if id == h.Config.ID {
+			h.Config = nil
+		}
+		err = h.BaseHandler.DeregisterConfig(id)
 	}
-	h.BaseHandler.DeregisterConfig(id)
+
 	return
 }
 
@@ -36,7 +39,7 @@ func (h *UnfollowHandler) Run(event *linebot.Event, variables map[string]interfa
 			variables[k] = v
 		}
 		var replyStr string
-		replyStr, err = h.runStage(h.Config.ID, h.Config.Stage, variables)
+		replyStr, err = h.runStage(h.Config.ID, 0, h.Config.Stage, variables)
 		reply = &config.CustomMessage{
 			Msg: replyStr,
 		}
@@ -48,6 +51,7 @@ func newUnfollowHandler() *UnfollowHandler {
 	return &UnfollowHandler{
 		BaseHandler: BaseHandler{
 			Configs: &sync.Map{},
+			Wating:  &sync.Map{},
 		},
 		Event:  linebot.EventTypeUnfollow,
 		Config: nil,
