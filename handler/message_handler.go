@@ -19,15 +19,20 @@ type TextMatcher struct {
 }
 
 func (m *TextMatcher) Add(cfg *config.MessageHandlerConfig) {
-	match := cfg.Match.([]interface{})
-	for _, target := range match {
-		(*m).store.Store(target, cfg)
+	if v := cfg.Match; v != nil {
+		match := v.([]interface{})
+		for _, target := range match {
+			(*m).store.Store(target, cfg)
+		}
 	}
+
 }
 func (m *TextMatcher) Remove(cfg *config.MessageHandlerConfig) {
-	match := cfg.Match.([]interface{})
-	for _, target := range match {
-		(*m).store.Delete(target)
+	if v := cfg.Match; v != nil {
+		match := v.([]interface{})
+		for _, target := range match {
+			(*m).store.Delete(target)
+		}
 	}
 
 }
@@ -153,7 +158,7 @@ func (h *MessageHandler) Run(event *linebot.Event, variables map[string]interfac
 
 func (h *MessageHandler) handleTextMessage(message string, variables *map[string]interface{}) (reply *config.CustomMessage, err error) {
 	if cfg := h.MessageTypeMapper[linebot.MessageTypeText].Find(message); cfg != nil {
-		// 塞入預設變數值
+		// add defaultValue
 		for k, v := range cfg.DefaultValues {
 			(*variables)[k] = v
 		}

@@ -20,8 +20,8 @@ var (
 
 func init() {
 	handlers[linebot.EventTypeMessage] = newMessageHandler()
-	handlers[linebot.EventTypeFollow] = nil
-	handlers[linebot.EventTypeUnfollow] = nil
+	handlers[linebot.EventTypeFollow] = newFollowHandler()
+	handlers[linebot.EventTypeUnfollow] = newUnfollowHandler()
 	handlers[linebot.EventTypeJoin] = nil
 	handlers[linebot.EventTypeLeave] = nil
 	handlers[linebot.EventTypeMemberJoined] = nil
@@ -93,6 +93,7 @@ func (h *BaseHandler) DeregisterConfig(id string) (err error) {
 }
 
 func (h *BaseHandler) Run(event linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage) {
+	// abstract
 	return
 }
 

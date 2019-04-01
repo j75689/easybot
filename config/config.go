@@ -4,9 +4,9 @@ package config
 type MessageHandlerConfig struct {
 	ID            string            `json:"id"`
 	EventType     string            `json:"eventType"`
-	MessageType   string            `json:"messagetype"`
+	MessageType   string            `json:"messagetype,omitempty"`
 	DefaultValues map[string]string `json:"defaultValues"`
-	Match         interface{}       `json:"match"`
+	Match         interface{}       `json:"match,omitempty"`
 	TimeOut       int               `json:"timeout"`
 	Stage         []*StageConfig    `json:"stage"`
 }

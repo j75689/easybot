@@ -1,0 +1,16 @@
+{
+  "id": "FollowExample",
+  "eventType": "follow",
+  "defaultValues": {
+    "repo": "https://github.com/j75689/easybot"
+  },
+  "stage": [
+    {
+      "type": "reply",
+      "value": {
+        "type": "text",
+        "text": "Welcome to EasyBot Channel. ${repo}"
+      }
+    }
+  ]
+}
