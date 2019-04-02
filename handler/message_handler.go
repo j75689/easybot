@@ -125,7 +125,6 @@ type MessageHandler struct {
 func (h *MessageHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err error) {
 	h.BaseHandler.RegisterConfig(cfg)
 	if matcher := h.MessageTypeMapper[linebot.MessageType(cfg.MessageType)]; matcher != nil {
-
 		matcher.Add(cfg)
 	}
 	return
@@ -154,7 +153,7 @@ func (h *MessageHandler) Run(event *linebot.Event, variables map[string]interfac
 	case *linebot.StickerMessage:
 	}
 
-	if reply == nil { // find wating queuq
+	if reply == nil { // find wating queue
 		reply, err = h.BaseHandler.Run(event, variables)
 	}
 

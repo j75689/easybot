@@ -33,7 +33,10 @@ func (h *FollowHandler) DeregisterConfig(id string) (err error) {
 }
 
 func (h *FollowHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage, err error) {
-	if h.Config != nil {
+
+	reply, err = h.BaseHandler.Run(event, variables)
+
+	if h.Config != nil && reply == nil {
 		// add defaultValue
 		for k, v := range h.Config.DefaultValues {
 			variables[k] = v

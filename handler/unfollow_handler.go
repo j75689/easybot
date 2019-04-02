@@ -33,7 +33,9 @@ func (h *UnfollowHandler) DeregisterConfig(id string) (err error) {
 }
 
 func (h *UnfollowHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage, err error) {
-	if h.Config != nil {
+	reply, err = h.BaseHandler.Run(event, variables)
+
+	if h.Config != nil && reply == nil {
 		// add defaultValue
 		for k, v := range h.Config.DefaultValues {
 			variables[k] = v
@@ -44,6 +46,7 @@ func (h *UnfollowHandler) Run(event *linebot.Event, variables map[string]interfa
 			Msg: replyStr,
 		}
 	}
+
 	return
 }
 
