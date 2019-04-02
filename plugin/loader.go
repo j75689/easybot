@@ -27,6 +27,8 @@ func Load(path string, log *zap.SugaredLogger) {
 		pluginfuncs.Store("Graphql", &graphql)
 		equal := PluginFunc(Equal)
 		pluginfuncs.Store("Equal", &equal)
+		curl := PluginFunc(Curl)
+		pluginfuncs.Store("Curl", &curl)
 	}
 	// load addition plugin
 	load(path)

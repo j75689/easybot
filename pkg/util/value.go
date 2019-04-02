@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -52,4 +53,10 @@ func getValue(layer []string, data interface{}) interface{} {
 	}
 
 	return getValue(layer[1:len(layer)], data)
+}
+
+// GetJSONBytes Unmarshal json to []byte
+func GetJSONBytes(input interface{}) []byte {
+	param, _ := json.Marshal(input)
+	return param
 }

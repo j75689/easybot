@@ -22,15 +22,10 @@ func Graphql(input interface{}, variables map[string]interface{}, logger *zap.Su
 	var (
 		config GraphqlPluginConfig
 		next   = true
+		err    error
 	)
-	param, err := json.Marshal(input)
 
-	if err != nil {
-		logger.Error(err)
-	}
-	logger.Debug(string(param))
-
-	err = json.Unmarshal(param, &config)
+	err = json.Unmarshal(util.GetJSONBytes(input), &config)
 	if err != nil {
 		logger.Error(err)
 		return nil, next, err
