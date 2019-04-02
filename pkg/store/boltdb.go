@@ -15,10 +15,10 @@ type BoltDB struct {
 	instance *bbolt.DB
 }
 
-func (db *BoltDB) Save(key string, data interface{}) (err error) {
+func (db *BoltDB) Save(collection string, key string, data interface{}) (err error) {
 
 	err = db.instance.Update(func(tx *bbolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(db.info.DBName))
+		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
 			return err
 		}
@@ -34,9 +34,9 @@ func (db *BoltDB) Save(key string, data interface{}) (err error) {
 	return
 }
 
-func (db *BoltDB) LoadAll(callback func(key string, value interface{})) (err error) {
+func (db *BoltDB) LoadAll(collection string, callback func(key string, value interface{})) (err error) {
 	err = db.instance.Batch(func(tx *bbolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(db.info.DBName))
+		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
 			return err
 		}
@@ -55,10 +55,10 @@ func (db *BoltDB) LoadAll(callback func(key string, value interface{})) (err err
 	return
 }
 
-func (db *BoltDB) Load(key string) (data interface{}, err error) {
+func (db *BoltDB) Load(collection string, key string) (data interface{}, err error) {
 
 	err = db.instance.Batch(func(tx *bbolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(db.info.DBName))
+		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
 			return err
 		}
@@ -73,9 +73,9 @@ func (db *BoltDB) Load(key string) (data interface{}, err error) {
 
 	return
 }
-func (db *BoltDB) Delete(key string) (err error) {
+func (db *BoltDB) Delete(collection string, key string) (err error) {
 	err = db.instance.Update(func(tx *bbolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(db.info.DBName))
+		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
 			return err
 		}

@@ -23,7 +23,11 @@ var (
 	webhook_path   = os.Getenv("WEBHOOK_PATH")
 	plugin_path    = os.Getenv("PLUGIN_PATH")
 	db_driver      = os.Getenv("DB_DRIVER")
-	db_path        = os.Getenv("DB_PATH")
+	db_name        = os.Getenv("DB_NAME")
+	db_host        = os.Getenv("DB_HOST")
+	db_port        = os.Getenv("DB_PORT")
+	db_user        = os.Getenv("DB_USER")
+	db_pass        = os.Getenv("DB_PASS")
 	context_path   = os.Getenv("CONTEXT_PATH")
 	admin_user     = os.Getenv("ADMIN_USER")
 	admin_pass     = os.Getenv("ADMIN_PASS")
@@ -44,8 +48,11 @@ func initServer() {
 	if plugin_path == "" {
 		plugin_path = "./plugin"
 	}
-	if db_path == "" {
-		db_path = "./data/" + appName + ".db"
+	if db_name == "" {
+		db_name = appName
+	}
+	if db_host == "" {
+		db_host = "./data/" + appName + ".db"
 	}
 	if db_driver == "" {
 		db_driver = "bolt"
@@ -64,23 +71,27 @@ func initServer() {
 	// init plugin
 	plugin.Load(plugin_path, log.GetLogger())
 
-	logger.Info("init db")
+	logger.Infof("init db driver:[%s]", db_driver)
 	// init db
 	var err error
 	db, err = store.NewStoreage(db_driver, &store.Connection{
-		DBName: "config",
-		Host:   db_path,
+		DBName: db_name,
+		Host:   db_host,
+		Port:   db_port,
+		User:   db_user,
+		Pass:   db_pass,
 	})
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 	logger.Info("init config")
 	// init config
-	if err = db.LoadAll(func(key string, value interface{}) {
+	if err = db.LoadAll("config", func(key string, value interface{}) {
 		if b, err := json.Marshal(value); err == nil {
 			var cfg config.MessageHandlerConfig
 			if err = json.Unmarshal(b, &cfg); err == nil {
 				handler.RegisterConfig(&cfg)
+				logger.Infof("Register config [%s]", key)
 			} else {
 				logger.Errorf("Unmarshal config [%s] error: %v", key, err)
 			}

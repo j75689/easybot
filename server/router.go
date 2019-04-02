@@ -129,8 +129,11 @@ func handleCRUDConfig(c *gin.Context) {
 
 	switch c.Request.Method {
 	case "GET":
-		if config, err := db.Load(configID); err == nil {
-			c.JSON(200, config)
+		if data, err := db.Load("config", configID); err == nil {
+			var messageConfig config.MessageHandlerConfig
+			b, _ := json.Marshal(data)
+			json.Unmarshal(b, &messageConfig)
+			c.JSON(200, messageConfig)
 		} else {
 			c.JSON(200, map[string]string{"error": err.Error()})
 		}
@@ -139,7 +142,7 @@ func handleCRUDConfig(c *gin.Context) {
 		if configData, err := c.GetRawData(); err == nil {
 			var messageConfig config.MessageHandlerConfig
 			if err = json.Unmarshal(configData, &messageConfig); err == nil {
-				if err = db.Save(messageConfig.ID, messageConfig); err != nil {
+				if err = db.Save("config", messageConfig.ID, messageConfig); err != nil {
 					logger.Errorf("Save config [%s] error: %s", messageConfig.ID, err.Error())
 				} else {
 					logger.Infof("Register config [%s]", messageConfig.ID)
@@ -154,7 +157,7 @@ func handleCRUDConfig(c *gin.Context) {
 			c.JSON(200, map[string]string{"error": err.Error()})
 		}
 	case "DELETE":
-		if data, err := db.Load(configID); err == nil {
+		if data, err := db.Load("config", configID); err == nil {
 			var messageConfig config.MessageHandlerConfig
 			if b, err := json.Marshal(data); err == nil {
 				if err = json.Unmarshal(b, &messageConfig); err != nil {
@@ -171,7 +174,7 @@ func handleCRUDConfig(c *gin.Context) {
 			c.JSON(200, map[string]string{"error": err.Error()})
 			return
 		}
-		if err := db.Delete(configID); err != nil {
+		if err := db.Delete("config", configID); err != nil {
 			logger.Errorf("Delete config [%s] error: %s", configID, err.Error())
 			c.JSON(200, map[string]string{"error": err.Error()})
 		} else {
