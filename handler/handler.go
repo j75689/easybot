@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -57,8 +59,16 @@ func Execute(event *linebot.Event) (reply *config.CustomMessage, err error) {
 	var (
 		variables = make(map[string]interface{})
 	)
+	// put environment variables
+	env := make(map[string]interface{})
+	for _, e := range os.Environ() {
+		pair := strings.Split(e, "=")
+		env[pair[0]] = pair[1]
+	}
+	variables["env"] = env
+	// put event variables
 	variables["event"] = structs.Map(event)
-
+	// run handler
 	if handler := handlers[event.Type]; handler != nil {
 		reply, err = handler.Run(event, variables)
 	}
