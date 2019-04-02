@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -40,6 +41,7 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 	logger.Info("Excute Graphql Plugin")
 	var (
 		config = CurlPluginConfig{
+			Method:      http.MethodGet,
 			Header:      make(map[string]string),
 			Timeout:     60,
 			Insecure:    false,
@@ -64,8 +66,9 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 			return http.ErrUseLastResponse
 		}
 	)
+	logger.Debug("timeout: ", config.Timeout)
 	client := &http.Client{
-		Timeout: time.Duration(config.Timeout),
+		Timeout: time.Duration(config.Timeout) * time.Second,
 	}
 	if !config.Location {
 		client.CheckRedirect = noCheckRedirect
@@ -73,6 +76,7 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 
 	if config.ProxyURL != "" {
 		proxyURL, err := url.Parse(config.ProxyURL)
+		logger.Debug("proxyURL: ", proxyURL)
 		if err != nil {
 			logger.Error("parse ProxyURL error: ", err)
 		}
@@ -110,6 +114,8 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 		req.SetBasicAuth(config.Username, config.Password)
 	}
 
+	logger.Debug(req)
+
 	response, err := client.Do(req)
 	if err != nil {
 		logger.Error("request error: ", err)
@@ -143,8 +149,10 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 			}
 		}
 	case "TEXT":
+		data := string(body)
 		for k, v := range config.Output.Variables {
-			variables[k] = strings.Replace(v, "${response}", string(body), -1)
+			r := regexp.MustCompile(v)
+			variables[k] = r.FindStringSubmatch(data)[1]
 		}
 	}
 
