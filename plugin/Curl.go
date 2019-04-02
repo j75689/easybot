@@ -38,7 +38,7 @@ type CurlPluginOutputConfig struct {
 }
 
 func Curl(input interface{}, variables map[string]interface{}, logger *zap.SugaredLogger) (map[string]interface{}, bool, error) {
-	logger.Info("Excute Graphql Plugin")
+	logger.Info("Excute Curl Plugin")
 	var (
 		config = CurlPluginConfig{
 			Method:      http.MethodGet,
