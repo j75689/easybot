@@ -6,10 +6,27 @@
   },
   "stage": [
     {
+      "type": "action",
+      "plugin": "Curl",
+      "parameter": {
+        "url": "https://api.line.me/v2/bot/profile/${##URL##:event.Source.UserID}",
+        "method": "GET",
+        "header": {
+          "Authorization": "Bearer ${env.CHANNEL_TOKEN}"
+        },
+        "output": {
+          "parser": "json",
+          "variables": {
+            "displayName": "displayName"
+          }
+        }
+      }
+    },
+    {
       "type": "reply",
       "value": {
         "type": "text",
-        "text": "Welcome to EasyBot Channel. ${repo}"
+        "text": "Hello ${displayName}\nWelcome to EasyBot Channel. ${repo}"
       }
     }
   ]
