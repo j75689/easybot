@@ -279,7 +279,7 @@ func (h *BaseHandler) runStage(id string, startIndex int, stageConfig []*config.
 			var b []byte
 			b, err = json.Marshal(stage.Value)
 			reply = util.ReplaceVariables(string(b), variables)
-
+			reply = util.ReplaceLineEmoji(reply)
 		}
 
 	}

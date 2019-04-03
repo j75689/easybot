@@ -6,9 +6,11 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/j75689/lineemoji"
 )
 
-// ReplaceVariables 取代變數
+// ReplaceVariables from string
 func ReplaceVariables(reply string, variables map[string]interface{}) string {
 	r, _ := regexp.Compile("\\$\\{(.*?)\\}")
 
@@ -31,6 +33,17 @@ func ReplaceVariables(reply string, variables map[string]interface{}) string {
 		}
 	}
 
+	return reply
+}
+
+// ReplaceLineEmoji replace line custom emoji character
+func ReplaceLineEmoji(reply string) string {
+	r, _ := regexp.Compile("(\\(.*?\\))")
+	for _, match := range r.FindAllStringSubmatch(reply, -1) {
+		if emoji, err := lineemoji.GetEmoji(match[0]); err == nil {
+			reply = strings.Replace(reply, match[0], string(emoji), -1)
+		}
+	}
 	return reply
 }
 
