@@ -82,9 +82,9 @@ func (db *MongoDB) Connect(conn *Connection, args ...interface{}) (err error) {
 
 	ctx, _ := context.WithTimeout(context.Background(), 60*time.Second)
 
-	url := fmt.Sprintf("%s", db.info.Host)
+	url := db.info.Host
 	if db.info.Port != "" {
-		url = fmt.Sprintf("%s:%s", db.info.Port)
+		url = fmt.Sprintf("%s:%s", db.info.Host, db.info.Port)
 	}
 	opts := options.Client().ApplyURI(url)
 
