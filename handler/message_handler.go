@@ -119,6 +119,7 @@ func (m *StickerMatcher) Find(message interface{}) (cfg *config.MessageHandlerCo
 type MessageHandler struct {
 	BaseHandler
 	Event             linebot.EventType
+	DefaultConfig     *config.MessageHandlerConfig
 	MessageTypeMapper map[linebot.MessageType]Matcher
 }
 
@@ -127,6 +128,9 @@ func (h *MessageHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err e
 	if matcher := h.MessageTypeMapper[linebot.MessageType(cfg.MessageType)]; matcher != nil {
 		matcher.Add(cfg)
 	}
+	if cfg.Match == nil && cfg.MessageType == "" { // default Config
+		h.DefaultConfig = cfg
+	}
 	return
 }
 
@@ -134,6 +138,11 @@ func (h *MessageHandler) DeregisterConfig(id string) (err error) {
 	if cfg := h.GetConfig(id); cfg != nil {
 		if matcher := h.MessageTypeMapper[linebot.MessageType(cfg.MessageType)]; matcher != nil {
 			matcher.Remove(cfg)
+		}
+		if h.DefaultConfig != nil {
+			if cfg.ID == h.DefaultConfig.ID { // default Config
+				h.DefaultConfig = nil
+			}
 		}
 	}
 	h.BaseHandler.DeregisterConfig(id)
@@ -155,6 +164,18 @@ func (h *MessageHandler) Run(event *linebot.Event, variables map[string]interfac
 
 	if reply == nil { // find wating queue
 		reply, err = h.BaseHandler.Run(event, variables)
+	}
+
+	if reply == nil && h.DefaultConfig != nil { // run default config
+		// add defaultValue
+		for k, v := range h.DefaultConfig.DefaultValues {
+			variables[k] = v
+		}
+		var replyStr string
+		replyStr, err = h.runStage(h.DefaultConfig.ID, 0, h.DefaultConfig.Stage, variables)
+		reply = &config.CustomMessage{
+			Msg: replyStr,
+		}
 	}
 
 	return

@@ -19,7 +19,7 @@
           "type": "reply",
           "value": {
             "type": "text",
-            "text": "請輸入您的借閱證帳號"
+            "text": "Please enter text"
           }
         }
       ],
@@ -39,7 +39,7 @@
           "type": "reply",
           "value": {
             "type": "text",
-            "text": "請輸入您的借閱證密碼"
+            "text": "Please enter text"
           }
         }
       ],

@@ -1,0 +1,16 @@
+{
+  "id": "DefaultMessageExample",
+  "eventType": "message",
+  "defaultValues": {
+    "repo": "https://github.com/j75689/easybot"
+  },
+  "stage": [
+    {
+      "type": "reply",
+      "value": {
+        "type": "text",
+        "text": "If you have any questions, you can open a new question on the GitHub board (${repo}/issues).\nWe will help you as soon as possible."
+      }
+    }
+  ]
+}
