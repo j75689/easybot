@@ -29,17 +29,12 @@ func initRouter() (router *gin.Engine) {
 	gin.SetMode(gin.ReleaseMode)
 
 	router = gin.New()
-	//router.Use(ginzap.Ginzap(defaultlogger, time.RFC3339, true))
 	router.Use(gin.Recovery())
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
-	//router.LoadHTMLGlob("./dashboard/build/index.html")
 	router.HTMLRender = gorice.New(rice.MustFindBox("../dashboard/build"))
 	// Session
 	store := cookie.NewStore([]byte(appName))
 	router.Use(sessions.Sessions("session", store))
-
-	// LineBot Hook
-	router.Any(webhook_path, gin.WrapH(newLineHookHandler()))
 
 	// Front-end file
 	if _, err := os.Stat("dashboard/build"); err == nil {
@@ -51,26 +46,43 @@ func initRouter() (router *gin.Engine) {
 		router.StaticFS("/public", dist.HTTPBox())
 	}
 
+	// Config CRUD
+	router.Any("/config/:id", handleCRUDConfig)
+
+	// Tester
+	router.Any("/debug/runner", handleTestRunner)
+	router.Any("/debug/plugin/:plugin", handleTestPlugin)
+
+	// Bot
+	BotAPI := router.Group("/bot")
+
+	// Line
+	LineAPIGroup := BotAPI.Group("/line")
+	if handler, err := httphandler.New(channel_secret, channel_token); err == nil {
+		if bot, err := handler.NewClient(); err == nil {
+			// Reply Hook
+			LineAPIGroup.Any("/hook", gin.WrapH(newLineHookHandler(handler, bot)))
+			// Push Message
+			LineAPIGroup.POST("/push/:userID", handlePushMessage(bot))
+			LineAPIGroup.POST("/multicast", handleMulticastMessage(bot))
+		} else {
+			logger.Error(err)
+		}
+	} else {
+		logger.Error(err)
+	}
+
 	ManagerGroup := router.Group("/")
 	ManagerGroup.Use(SessionMiddleware())
 	// Dashboard
 	{
-		// API
+		// Page API
 		ManagerGroup.POST("/login", handleLogin)
 		// Pages
 		ManagerGroup.GET("/", handleIndexPage)
 		ManagerGroup.GET("/dashboard", handleIndexPage)
 		ManagerGroup.GET("/login", handleIndexPage)
 	}
-
-	// Config CRUD
-	router.Any("/config/:id", handleCRUDConfig)
-
-	// Tester
-
-	router.Any("/debug/runner", handleTestRunner)
-	router.Any("/debug/plugin/:plugin", handleTestPlugin)
-	router.Any("/debug/request", handleTestRequest)
 
 	return
 }
@@ -84,26 +96,12 @@ func handleIndexPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", gin.H{})
 }
 
-func newLineHookHandler() (handler *httphandler.WebhookHandler) {
-	// Line SDK
-	handler, err := httphandler.New(
-		channel_secret,
-		channel_token,
-	)
-	if err != nil {
-		logger.Error(err)
-		return
-	}
+func newLineHookHandler(handler *httphandler.WebhookHandler, bot *linebot.Client) *httphandler.WebhookHandler {
 
 	// Setup HTTP Server for receiving requests from LINE platform
 	handler.HandleEvents(func(events []*linebot.Event, r *http.Request) {
 
 		logger.Debug(r)
-
-		bot, err := handler.NewClient()
-		if err != nil {
-			logger.Error(err)
-		}
 		for _, event := range events {
 			logger.Debug(structs.Map(event))
 			if msg, err := messagehandler.Execute(event); msg != nil {
@@ -119,7 +117,66 @@ func newLineHookHandler() (handler *httphandler.WebhookHandler) {
 		}
 	})
 
-	return
+	return handler
+}
+
+func handlePushMessage(bot *linebot.Client) func(*gin.Context) {
+	return func(c *gin.Context) {
+		var (
+			postdata []byte
+			err      error
+		)
+		if postdata, err = ioutil.ReadAll(c.Request.Body); err == nil {
+			if _, err = bot.PushMessage(c.Param("userID"), &config.CustomMessage{Msg: string(postdata)}).Do(); err == nil {
+				c.JSON(http.StatusOK, map[string]interface{}{
+					"success": true,
+				})
+				return
+			}
+		}
+
+		c.JSON(http.StatusOK, map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+}
+
+func handleMulticastMessage(bot *linebot.Client) func(*gin.Context) {
+	return func(c *gin.Context) {
+		type MulticastBody struct {
+			UserIDs []string      `json:"to"`
+			Message []interface{} `json:"messages"`
+		}
+		var (
+			postdata      []byte
+			multicastBody MulticastBody
+			Messages      []linebot.SendingMessage
+			err           error
+		)
+		if postdata, err = ioutil.ReadAll(c.Request.Body); err == nil {
+			if err = json.Unmarshal(postdata, &multicastBody); err == nil {
+				for _, data := range multicastBody.Message {
+					if msg, err := json.Marshal(data); err == nil {
+						Messages = append(Messages, &config.CustomMessage{Msg: string(msg)})
+					} else {
+						logger.Error("Muticast Cause Error: ", err)
+					}
+				}
+
+				if _, err = bot.Multicast(multicastBody.UserIDs, Messages...).Do(); err == nil {
+					c.JSON(http.StatusOK, map[string]interface{}{
+						"success": true,
+					})
+					return
+				}
+			}
+		}
+
+		c.JSON(http.StatusOK, map[string]interface{}{
+			"error": err.Error(),
+		})
+
+	}
 }
 
 func handleCRUDConfig(c *gin.Context) {
@@ -246,15 +303,6 @@ func handleTestPlugin(c *gin.Context) {
 		"error":     err,
 	})
 
-}
-
-func handleTestRequest(c *gin.Context) {
-	body, _ := ioutil.ReadAll(c.Request.Body)
-	logger.Info(string(body))
-	c.JSON(200, map[string]interface{}{
-		"headers": c.Request.Header,
-		"body":    string(body),
-	})
 }
 
 func handleLogin(c *gin.Context) {

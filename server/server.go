@@ -20,7 +20,6 @@ var (
 	channel_secret = os.Getenv("CHANNEL_SECRET")
 	channel_token  = os.Getenv("CHANNEL_TOKEN")
 	port           = os.Getenv("PORT")
-	webhook_path   = os.Getenv("WEBHOOK_PATH")
 	plugin_path    = os.Getenv("PLUGIN_PATH")
 	db_driver      = os.Getenv("DB_DRIVER")
 	db_name        = os.Getenv("DB_NAME")
@@ -41,9 +40,6 @@ var (
 func initServer() {
 	if port == "" {
 		port = "8801"
-	}
-	if webhook_path == "" {
-		webhook_path = "/webhook"
 	}
 	if plugin_path == "" {
 		plugin_path = "./plugin"
