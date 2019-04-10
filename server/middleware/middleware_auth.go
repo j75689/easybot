@@ -12,9 +12,11 @@ import (
 func UserAuthMiddleware(skipper RouteSkipperFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		if skipper(c) {
-			c.Next()
-			return
+		if skipper != nil {
+			if skipper(c) {
+				c.Next()
+				return
+			}
 		}
 
 		token, err := auth.GetTokenFromRequest(c.Request)

@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 
 	"github.com/fatih/structs"
-	"github.com/gin-contrib/sessions"
 	messagehandler "github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/store"
@@ -16,29 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/j75689/easybot/config"
 )
-
-// HandleLogin process login api
-func HandleLogin(adminUser, adminPass string) func(*gin.Context) {
-	return func(c *gin.Context) {
-		var (
-			user   = c.DefaultPostForm("user", "")
-			pass   = c.DefaultPostForm("pass", "")
-			result = gin.H{
-				"success": false,
-			}
-		)
-
-		if user == adminUser && pass == adminPass {
-			session := sessions.Default(c)
-			session.Set("login", true)
-			session.Save()
-			result["success"] = true
-		}
-
-		c.JSON(200, result)
-	}
-
-}
 
 // HandleGetConfig process get config file
 func HandleGetConfig(db *store.Storage) func(*gin.Context) {

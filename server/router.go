@@ -26,6 +26,7 @@ func initRouter() (router *gin.Engine) {
 	router.NoRoute(middleware.NoRouteHandler())
 	router.Use(gin.Recovery())
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
+	router.Use(middleware.TraceMiddleware(nil))
 
 	// Register dashboard
 	registerDashBoardRouter(router)
