@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/j75689/easybot/server/auth"
+
 	"github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/plugin"
 	"go.uber.org/zap"
@@ -17,6 +19,7 @@ import (
 
 var (
 	appName        = "easybot"
+	appSecret      = os.Getenv("APP_SECRET")
 	channel_secret = os.Getenv("CHANNEL_SECRET")
 	channel_token  = os.Getenv("CHANNEL_TOKEN")
 	port           = os.Getenv("PORT")
@@ -94,6 +97,11 @@ func initServer() {
 		}
 	}); err != nil {
 		logger.Error(err)
+	}
+	logger.Info("init Auth module")
+	// init Auth module
+	if appSecret != "" {
+		auth.SetSigningKey(appSecret)
 	}
 }
 
