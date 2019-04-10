@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import Index from "./pages/index";
+import Dashboard from "./pages/dashboard";
 import SignIn from "./pages/sign-in";
+import AccessRole from "./pages/access-role";
 import * as serviceWorker from "./serviceWorker";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
 
@@ -14,10 +15,13 @@ class App extends Component {
     }
 
     return (
-      <Switch>
-        <Route exact path={prefix + "/dashboard"} component={Index} />
-        <Route exact path={prefix + "/login"} component={SignIn} />
-      </Switch>
+      <>
+        <Switch>
+          <Route exact path={prefix + "/dashboard"} component={Dashboard} />
+          <Route exact path={prefix + "/accessrole"} component={AccessRole} />
+          <Route exact path={prefix + "/login"} component={SignIn} />
+        </Switch>
+      </>
     );
   }
 }
