@@ -65,7 +65,7 @@ func TestGetTokenFromRequest(t *testing.T) {
 			args: args{
 				request: &http.Request{
 					Header: http.Header{
-						"Authorization": []string{"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJUZXN0In0.PpXF9tI9qIkPH-ZOCKJUR0I2ynXhtlsFIcl6f3DE3WLNd_So4_sHwwP0bQXVBEbOg5AbqfgLoMVopwSUc8kHnw"},
+						"Authorization": []string{"Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJUZXN0In0.PpXF9tI9qIkPH-ZOCKJUR0I2ynXhtlsFIcl6f3DE3WLNd_So4_sHwwP0bQXVBEbOg5AbqfgLoMVopwSUc8kHnw"},
 					},
 				},
 			},
@@ -78,7 +78,7 @@ func TestGetTokenFromRequest(t *testing.T) {
 			got, err := GetTokenFromRequest(tt.args.request)
 
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetTokenFromRequest() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetTokenFromRequest() error = %v, wantErr %v, %v", err, tt.wantErr, got)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {

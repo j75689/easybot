@@ -33,7 +33,7 @@ type TokenInfo struct {
 }
 
 var (
-	defaultKey = ""
+	defaultKey = []byte("easybot")
 	Options    = options{
 		tokenType:     "Bearer",
 		expired:       time.Duration(7200) * time.Second,
@@ -144,6 +144,8 @@ func GetTokenFromRequest(request *http.Request) (*jwt.StandardClaims, error) {
 	prefix := fmt.Sprintf("%s ", Options.tokenType)
 	if tokenString != "" && strings.HasPrefix(tokenString, prefix) {
 		tokenString = tokenString[len(prefix):]
+	} else {
+		return nil, ErrMalformedToken
 	}
 
 	return ParseToken(tokenString)
