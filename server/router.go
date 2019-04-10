@@ -3,11 +3,13 @@ package server
 import (
 	"os"
 
+	rice "github.com/GeertJohan/go.rice"
+	"github.com/foolin/gin-template/supports/gorice"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/j75689/easybot/server/context"
 	"github.com/j75689/easybot/server/middleware"
 
-	rice "github.com/GeertJohan/go.rice"
-	"github.com/foolin/gin-template/supports/gorice"
 	"github.com/gin-gonic/contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -24,25 +26,6 @@ func initRouter() (router *gin.Engine) {
 	router.NoRoute(middleware.NoRouteHandler())
 	router.Use(gin.Recovery())
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
-
-	// auth
-	router.Use(middleware.UserAuthMiddleware(middleware.AllowPathPrefixSkipper(
-		middleware.Prefix{Method: "GET", Path: "/public"},
-		middleware.Prefix{Method: "GET", Path: "/login"},
-		middleware.Prefix{Method: "Any", Path: "/api/v1/login"},
-		middleware.Prefix{Method: "Any", Path: "/api/v1/bot/hook"})))
-
-	// Front-end file
-	if _, err := os.Stat("dashboard/build"); err == nil {
-		logger.Info("Serve dashboard/build")
-		router.LoadHTMLGlob("./dashboard/build/index.html")
-		router.Static("/public", "dashboard/build")
-	} else {
-		logger.Info("Serve rice")
-		router.HTMLRender = gorice.New(rice.MustFindBox("../dashboard/build"))
-		dist := rice.MustFindBox("../dashboard/build")
-		router.StaticFS("/public", dist.HTTPBox())
-	}
 
 	// Register dashboard
 	registerDashBoardRouter(router)
@@ -62,17 +45,36 @@ func initRouter() (router *gin.Engine) {
 }
 
 func registerDashBoardRouter(app *gin.Engine) {
+	// static file
+	if _, err := os.Stat("dashboard/build"); err == nil {
+		logger.Info("Serve dashboard/build")
+		app.LoadHTMLGlob("./dashboard/build/index.html")
+		app.Static("/public", "dashboard/build")
+	} else {
+		logger.Info("Serve rice")
+		app.HTMLRender = gorice.New(rice.MustFindBox("../dashboard/build"))
+		dist := rice.MustFindBox("../dashboard/build")
+		app.StaticFS("/public", dist.HTTPBox())
+	}
+
 	dashboard := app.Group("/")
+	// session
+	store := cookie.NewStore([]byte(appSecret))
+	dashboard.Use(sessions.Sessions("session", store))
+	// middleware
+	dashboard.Use(middleware.SessionMiddleware(context_path))
+	// page router
 	dashboard.GET("/", context.HandleIndexPage(context_path))
 	dashboard.GET("/dashboard", context.HandleIndexPage(context_path))
 	dashboard.GET("/login", context.HandleIndexPage(context_path))
+	dashboard.POST("/login", context.HandleLogin(admin_user, admin_pass))
 }
 
 func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, botClient *linebot.Client) {
 	v1 := app.Group("/api/v1")
-
-	// login api
-	v1.POST("/login", context.HandleLogin())
+	// middleware
+	v1.Use(middleware.UserAuthMiddleware(middleware.AllowPathPrefixSkipper(
+		middleware.Prefix{Method: "Any", Path: "/api/v1/bot/hook"})))
 
 	// crud config
 	v1.GET("/config/:id", context.HandleGetConfig(&db))

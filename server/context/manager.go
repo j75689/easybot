@@ -5,12 +5,12 @@ import (
 	"io/ioutil"
 
 	"github.com/fatih/structs"
+	"github.com/gin-contrib/sessions"
 	messagehandler "github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/store"
 	"github.com/j75689/easybot/pkg/util"
 	"github.com/j75689/easybot/plugin"
-	"github.com/j75689/easybot/server/auth"
 	"github.com/line/line-bot-sdk-go/linebot"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ import (
 )
 
 // HandleLogin process login api
-func HandleLogin() func(*gin.Context) {
+func HandleLogin(adminUser, adminPass string) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var (
 			user   = c.DefaultPostForm("user", "")
@@ -28,16 +28,11 @@ func HandleLogin() func(*gin.Context) {
 			}
 		)
 
-		if user == "admin" && pass == "admin" {
-			if token, err := auth.GenerateToken("admin", "admin"); err == nil {
-				result = gin.H{
-					"success": true,
-					"token":   token,
-				}
-			} else {
-				logger.Error("login error: ", err)
-			}
-
+		if user == adminUser && pass == adminPass {
+			session := sessions.Default(c)
+			session.Set("login", true)
+			session.Save()
+			result["success"] = true
 		}
 
 		c.JSON(200, result)

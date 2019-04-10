@@ -33,7 +33,7 @@ type TokenInfo struct {
 }
 
 var (
-	defaultKey = []byte("easybot")
+	defaultKey = ""
 	Options    = options{
 		tokenType:     "Bearer",
 		expired:       time.Duration(7200) * time.Second,

@@ -41,6 +41,9 @@ var (
 )
 
 func initServer() {
+	if appSecret == "" {
+		appSecret = appName
+	}
 	if port == "" {
 		port = "8801"
 	}
@@ -100,9 +103,7 @@ func initServer() {
 	}
 	logger.Info("init Auth module")
 	// init Auth module
-	if appSecret != "" {
-		auth.SetSigningKey(appSecret)
-	}
+	auth.SetSigningKey(appSecret)
 }
 
 // Start 啟動服務
