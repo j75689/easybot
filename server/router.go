@@ -71,6 +71,10 @@ func registerDashBoardRouter(app *gin.Engine) {
 	// login
 	dashboard.GET("/login", context.HandleIndexPage(context_path))
 	dashboard.POST("/login", context.HandleLogin(admin_user, admin_pass))
+	// runner
+	dashboard.POST("/runner", context.HandleTestRunner())
+	// plugin
+	dashboard.POST("/plugin/:plugin", context.HandleTestPlugin())
 	// accessrole
 	dashboard.GET("/role/account", context.HandleGetAllServiceAccount(&db))
 	dashboard.DELETE("/role/account", context.HandleBatchDeleteServiceAccount(&db))
@@ -80,16 +84,17 @@ func registerDashBoardRouter(app *gin.Engine) {
 func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, botClient *linebot.Client) {
 	v1 := app.Group("/api/v1")
 	// middleware
-	v1.Use(middleware.UserAuthMiddleware(middleware.AllowPathPrefixSkipper(
-		middleware.Prefix{Method: "Any", Path: "/api/v1/bot/hook"})))
+	skipper := middleware.AllowPathPrefixSkipper(
+		middleware.Prefix{Method: "Any", Path: "/api/v1/bot/hook"})
+	v1.Use(middleware.UserAuthMiddleware(skipper))
+	v1.Use(middleware.ScopeMiddleware(&db, skipper))
 
 	// crud config
 	v1.GET("/config/:id", context.HandleGetConfig(&db))
 	v1.POST("/config/:id", context.HandlePostConfig(&db))
 	v1.DELETE("/config/:id", context.HandleDeleteConfig(&db))
 
-	// tester
-	v1.POST("/runner", context.HandleTestRunner())
+	// plugin
 	v1.POST("/plugin/:plugin", context.HandleTestPlugin())
 
 	botAPI := v1.Group("/bot")

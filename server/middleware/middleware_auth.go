@@ -18,15 +18,15 @@ func UserAuthMiddleware(skipper RouteSkipperFunc) gin.HandlerFunc {
 			}
 		}
 
-		token, err := auth.GetTokenFromRequest(c.Request)
+		token, claim, err := auth.GetTokenFromRequest(c.Request)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 
-		// verify scope
-		_ = token
+		c.Set("token", token)
+		c.Set("claim", claim)
 
 	}
 }

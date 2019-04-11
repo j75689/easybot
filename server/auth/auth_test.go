@@ -7,6 +7,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/j75689/easybot/model"
+	"github.com/j75689/easybot/server/auth/claim"
 )
 
 func TestGenerateToken(t *testing.T) {
@@ -55,7 +56,7 @@ func TestGetTokenFromRequest(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *ServiceAccountClaims
+		want    *claim.ServiceAccountClaims
 		wantErr bool
 	}{
 		{
@@ -67,13 +68,13 @@ func TestGetTokenFromRequest(t *testing.T) {
 					},
 				},
 			},
-			want:    &ServiceAccountClaims{StandardClaims: jwt.StandardClaims{Subject: "Test"}},
+			want:    &claim.ServiceAccountClaims{StandardClaims: jwt.StandardClaims{Subject: "Test"}},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetTokenFromRequest(tt.args.request)
+			_, got, err := GetTokenFromRequest(tt.args.request)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetTokenFromRequest() error = %v, wantErr %v, %v", err, tt.wantErr, got)

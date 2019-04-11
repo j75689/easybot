@@ -9,6 +9,8 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/j75689/easybot/model"
+	"github.com/j75689/easybot/server/auth/claim"
+	"github.com/j75689/easybot/server/auth/token"
 )
 
 var (
@@ -24,24 +26,6 @@ type options struct {
 	keyfunc       jwt.Keyfunc
 	expired       time.Duration
 	tokenType     string
-}
-
-// TokenInfo jwt info
-type TokenInfo struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	Expire      int64  `json:"expire"`
-}
-
-// ServiceAccountClaims custom claime
-type ServiceAccountClaims struct {
-	jwt.StandardClaims
-	Name     string
-	EMail    string
-	Domain   string
-	Provider string
-	Scope    string
-	Active   int
 }
 
 var (
@@ -72,9 +56,9 @@ func SetSigningKey(secret string) {
 }
 
 // GenerateToken create new jwt token
-func GenerateToken(info *model.ServiceAccount) (*TokenInfo, error) {
+func GenerateToken(info *model.ServiceAccount) (*token.TokenInfo, error) {
 	now := time.Now()
-	claim := &ServiceAccountClaims{
+	claim := &claim.ServiceAccountClaims{
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  now.Unix(),
 			NotBefore: now.Unix(),
@@ -92,13 +76,13 @@ func GenerateToken(info *model.ServiceAccount) (*TokenInfo, error) {
 		claim.ExpiresAt = expiresAt
 	}
 
-	token := jwt.NewWithClaims(Options.signingMethod, claim)
+	jwttoken := jwt.NewWithClaims(Options.signingMethod, claim)
 
-	tokenString, err := token.SignedString(Options.signingKey)
+	tokenString, err := jwttoken.SignedString(Options.signingKey)
 	if err != nil {
 		return nil, err
 	}
-	return &TokenInfo{
+	return &token.TokenInfo{
 		AccessToken: tokenString,
 		TokenType:   Options.tokenType,
 		Expire:      expiresAt,
@@ -106,8 +90,8 @@ func GenerateToken(info *model.ServiceAccount) (*TokenInfo, error) {
 }
 
 // ParseToken resolve TokenString to Info
-func ParseToken(tokenString string) (*ServiceAccountClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &ServiceAccountClaims{}, Options.keyfunc)
+func ParseToken(tokenString string) (*claim.ServiceAccountClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &claim.ServiceAccountClaims{}, Options.keyfunc)
 	if err != nil {
 		if ve, ok := err.(*jwt.ValidationError); ok {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
@@ -126,16 +110,17 @@ func ParseToken(tokenString string) (*ServiceAccountClaims, error) {
 		return nil, ErrInvalidToken
 	}
 
-	return token.Claims.(*ServiceAccountClaims), nil
+	return token.Claims.(*claim.ServiceAccountClaims), nil
 }
 
-func RefreshToken(tokenString string) (*TokenInfo, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &ServiceAccountClaims{}, Options.keyfunc)
+// RefreshToken extend expired time
+func RefreshToken(tokenString string) (*token.TokenInfo, error) {
+	jwttoken, err := jwt.ParseWithClaims(tokenString, &claim.ServiceAccountClaims{}, Options.keyfunc)
 	if err != nil {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*ServiceAccountClaims); ok && token.Valid {
+	if claims, ok := jwttoken.Claims.(*claim.ServiceAccountClaims); ok && jwttoken.Valid {
 		var expiresAt int64
 		if claims.Active > 0 {
 			now := time.Now()
@@ -143,12 +128,12 @@ func RefreshToken(tokenString string) (*TokenInfo, error) {
 			claims.ExpiresAt = time.Now().Add(Options.expired).Unix()
 		}
 
-		token := jwt.NewWithClaims(Options.signingMethod, claims)
-		tokenString, err := token.SignedString(Options.signingKey)
+		jwttoken := jwt.NewWithClaims(Options.signingMethod, claims)
+		tokenString, err := jwttoken.SignedString(Options.signingKey)
 		if err != nil {
 			return nil, err
 		}
-		return &TokenInfo{
+		return &token.TokenInfo{
 			AccessToken: tokenString,
 			TokenType:   Options.tokenType,
 			Expire:      expiresAt,
@@ -159,14 +144,23 @@ func RefreshToken(tokenString string) (*TokenInfo, error) {
 }
 
 // GetTokenFromRequest get token info from http request
-func GetTokenFromRequest(request *http.Request) (*ServiceAccountClaims, error) {
+func GetTokenFromRequest(request *http.Request) (*token.TokenInfo, *claim.ServiceAccountClaims, error) {
 	tokenString := request.Header.Get("Authorization")
 	prefix := fmt.Sprintf("%s ", Options.tokenType)
 	if tokenString != "" && strings.HasPrefix(tokenString, prefix) {
 		tokenString = tokenString[len(prefix):]
 	} else {
-		return nil, ErrMalformedToken
+		return nil, nil, ErrMalformedToken
 	}
 
-	return ParseToken(tokenString)
+	claim, err := ParseToken(tokenString)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &token.TokenInfo{
+		TokenType:   Options.tokenType,
+		AccessToken: tokenString,
+		Expire:      claim.ExpiresAt,
+	}, claim, nil
 }
