@@ -22,7 +22,7 @@ func SessionMiddleware(contextPath string) gin.HandlerFunc {
 			c.Next()
 		} else {
 			c.Redirect(http.StatusMovedPermanently, contextPath+"login")
-			c.Done()
+			c.Abort()
 		}
 
 	}

@@ -12,7 +12,8 @@ import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
-import axios from "axios";
+import api from "../lib/api";
+import { Router } from "react-router-dom";
 
 const styles = theme => ({
   main: {
@@ -53,25 +54,18 @@ class SignIn extends React.Component {
     pass: ""
   };
 
-  handleLogin = () => {
-    let data = new FormData();
-    data.append("user", this.state.user);
-    data.append("pass", this.state.pass);
-    axios
-      .post("login", data, {
-        headers: { "Content-Type": "multipart/form-data" }
-      })
-      .then(function(response) {
-        if (response.data.success) {
-          window.location = "dashboard";
-        } else {
-          alert("帳號密碼錯誤！");
-        }
-      })
-      .catch(function(error) {
-        alert("發生錯誤！");
-      });
-  };
+  async handleLogin() {
+    let result = await api.Login(this.state.user, this.state.pass);
+    if (result) {
+      if (result.data.success) {
+        this.props.history.push(`/dashboard`);
+      } else {
+        alert("Login Falid.");
+      }
+    } else {
+      alert("Error!");
+    }
+  }
 
   render() {
     const { classes } = this.props;
@@ -85,7 +79,13 @@ class SignIn extends React.Component {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <form className={classes.form}>
+          <form
+            className={classes.form}
+            onSubmit={e => {
+              e.preventDefault();
+              this.handleLogin();
+            }}
+          >
             <FormControl margin="normal" required fullWidth>
               <InputLabel htmlFor="username">Username</InputLabel>
               <Input
@@ -117,12 +117,11 @@ class SignIn extends React.Component {
               label="Remember me"
             /> */}
             <Button
-              type="button"
+              type="submit"
               fullWidth
               variant="contained"
               color="primary"
               className={classes.submit}
-              onClick={this.handleLogin}
             >
               Sign in
             </Button>

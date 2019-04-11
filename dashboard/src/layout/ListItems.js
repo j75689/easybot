@@ -9,7 +9,7 @@ import SwapHorizIcon from "@material-ui/icons/SwapHoriz";
 import { Link } from "react-router-dom";
 export const mainListItems = (
   <div>
-    <Link to="dashboard">
+    <Link to="/dashboard">
       <ListItem button>
         <ListItemIcon>
           <DashboardIcon />
@@ -23,7 +23,7 @@ export const mainListItems = (
 export const systemSettingListItems = (
   <div>
     <ListSubheader inset>System Setting</ListSubheader>
-    <Link to="accessrole">
+    <Link to="/accessrole">
       <ListItem button>
         <ListItemIcon>
           <SwapHorizIcon />

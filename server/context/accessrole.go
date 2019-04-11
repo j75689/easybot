@@ -1,6 +1,7 @@
 package context
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,9 +9,34 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/j75689/easybot/config"
 	"github.com/j75689/easybot/model"
+	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/store"
 	"github.com/j75689/easybot/server/auth"
 )
+
+// HandleGetAllServiceAccount process get all service account info
+func HandleGetAllServiceAccount(db *store.Storage) func(*gin.Context) {
+	return func(c *gin.Context) {
+		var accounts []model.ServiceAccount
+		err := (*db).LoadAll(config.ServiceAccountTable, func(key string, value interface{}) {
+			var account model.ServiceAccount
+			if data, err := json.Marshal(value); err == nil {
+				json.Unmarshal(data, &account)
+				accounts = append(accounts, account)
+			} else {
+				logger.Errorf("unmarshal account [%v] error [%v]", key, err)
+			}
+		})
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"error": err,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, accounts)
+
+	}
+}
 
 // HandleCreateServiceAccount process create service account
 func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
@@ -48,7 +74,6 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": err})
 			return
 		}
-
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 		})

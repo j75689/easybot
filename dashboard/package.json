@@ -7,6 +7,7 @@
     "@material-ui/icons": "^3.0.2",
     "axios": "^0.18.0",
     "prop-types": "latest",
+    "querystring": "^0.2.0",
     "react": "latest",
     "react-decoration": "^2.0.0",
     "react-dom": "latest",

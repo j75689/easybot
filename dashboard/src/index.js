@@ -11,13 +11,7 @@ import {
   Redirect,
   useRouterHistory
 } from "react-router-dom";
-
-var base = document.getElementsByTagName("base")[0].href;
-base = base.substring(base.indexOf("//") + 2, base.length);
-if (base.indexOf("/") > -1) {
-  base = base.substring(base.indexOf("/"), base.length);
-}
-const basehref = base;
+import Config from "./lib/config";
 class App extends Component {
   render() {
     return (
@@ -33,7 +27,7 @@ class App extends Component {
 }
 
 ReactDOM.render(
-  <BrowserRouter basename={basehref}>
+  <BrowserRouter basename={Config.Basehref}>
     <App />
   </BrowserRouter>,
   document.getElementById("root")

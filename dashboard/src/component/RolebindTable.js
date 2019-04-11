@@ -20,6 +20,7 @@ import PlayListAddIcon from "@material-ui/icons/PlaylistAdd";
 import Button from "@material-ui/core/Button";
 import { lighten } from "@material-ui/core/styles/colorManipulator";
 import NewRoleAccountDialog from "./NewRoleAccountDialog";
+import api from "../lib/api";
 function deleteData(data) {
   alert(data);
 }
@@ -202,7 +203,7 @@ class RolebindTableToolbar extends React.Component {
               </IconButton>
             </Tooltip>
           ) : (
-            <NewRoleAccountDialog />
+            <NewRoleAccountDialog {...this.props} />
           )}
         </div>
       </Toolbar>
@@ -234,29 +235,41 @@ const styles = theme => ({
 });
 
 class RolebindTable extends React.Component {
-  state = {
-    order: "asc",
-    orderBy: "calories",
-    selected: [],
-    data: [
-      createData(
-        "hylib",
-        "push,multicast",
-        "20190410",
-        "20190415",
-        "koaermkasdofiewku893123K312893"
-      ),
-      createData(
-        "hylib2",
-        "push,multicast",
-        "20190410",
-        "20190415",
-        "koaermkasdofiewku893123K312893"
-      )
-    ],
-    page: 0,
-    rowsPerPage: 5
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      order: "asc",
+      orderBy: "calories",
+      selected: [],
+      data: [],
+      page: 0,
+      rowsPerPage: 5
+    };
+
+    this.RefreshAccount = this.RefreshAccount.bind(this);
+  }
+
+  componentDidMount() {
+    this.RefreshAccount();
+  }
+
+  async RefreshAccount() {
+    let resp = await api.GetAllServiceAccount();
+    let accounts = [];
+    if (resp) {
+      resp.data.map(item => {
+        let generate = new Date(item.generate * 1000).toISOString();
+        let expired = new Date(item.expired * 1000).toISOString();
+        accounts.push(
+          createData(item.name, item.scope, generate, expired, item.token)
+        );
+      });
+
+      this.setState({
+        data: accounts
+      });
+    }
+  }
 
   handleRequestSort = (event, property) => {
     const orderBy = property;
@@ -319,6 +332,7 @@ class RolebindTable extends React.Component {
         <RolebindTableToolbar
           numSelected={selected.length}
           selected={selected}
+          refresh={this.RefreshAccount}
         />
         <div className={classes.tableWrapper}>
           <Table className={classes.table} aria-labelledby="tableTitle">

@@ -7,7 +7,7 @@ class AccessRole extends React.Component {
   render() {
     return (
       <Layout PageName="AccessRole">
-        <RolebindTable />
+        <RolebindTable {...this.props} />
       </Layout>
     );
   }
