@@ -20,7 +20,7 @@ func UserAuthMiddleware(skipper RouteSkipperFunc) gin.HandlerFunc {
 
 		token, err := auth.GetTokenFromRequest(c.Request)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
