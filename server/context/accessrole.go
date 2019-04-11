@@ -2,6 +2,7 @@ package context
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,7 +18,7 @@ import (
 // HandleGetAllServiceAccount process get all service account info
 func HandleGetAllServiceAccount(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
-		var accounts []model.ServiceAccount
+		var accounts = []model.ServiceAccount{}
 		err := (*db).LoadAll(config.ServiceAccountTable, func(key string, value interface{}) {
 			var account model.ServiceAccount
 			if data, err := json.Marshal(value); err == nil {
@@ -80,9 +81,29 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 	}
 }
 
-// HandleDeleteServiceAccount process delete service account
-func HandleDeleteServiceAccount(db *store.Storage) func(*gin.Context) {
+// HandleBatchDeleteServiceAccount process batch delete service account
+func HandleBatchDeleteServiceAccount(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
+		var (
+			accounts []string
+		)
+		formdata, _ := ioutil.ReadAll(c.Request.Body)
+		err := json.Unmarshal(formdata, &accounts)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"success": false, "error": err})
+			return
+		}
+
+		for _, account := range accounts {
+			err = (*db).Delete(config.ServiceAccountTable, account)
+			if err != nil {
+				logger.Error("delete account [%s] error [%v]", account, err)
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+		})
 
 	}
 }

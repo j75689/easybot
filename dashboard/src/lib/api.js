@@ -30,6 +30,22 @@ const api = {
       console.log(err);
     }
   },
+  async BatchDeleteServiceAccount(accounts) {
+    try {
+      let res = await service.delete("/role/account", {
+        data: accounts
+      });
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
   async GetAllServiceAccount() {
     try {
       let res = await service.get("/role/account");

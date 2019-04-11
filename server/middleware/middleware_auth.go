@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,16 +20,13 @@ func UserAuthMiddleware(skipper RouteSkipperFunc) gin.HandlerFunc {
 
 		token, err := auth.GetTokenFromRequest(c.Request)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 			c.Abort()
 			return
 		}
 
-		if token.Subject == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": errors.New("user not login")})
-			c.Abort()
-			return
-		}
+		// verify scope
+		_ = token
 
 	}
 }

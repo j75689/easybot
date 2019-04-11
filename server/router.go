@@ -73,6 +73,7 @@ func registerDashBoardRouter(app *gin.Engine) {
 	dashboard.POST("/login", context.HandleLogin(admin_user, admin_pass))
 	// accessrole
 	dashboard.GET("/role/account", context.HandleGetAllServiceAccount(&db))
+	dashboard.DELETE("/role/account", context.HandleBatchDeleteServiceAccount(&db))
 	dashboard.POST("/role/account/:name", context.HandleCreateServiceAccount(&db))
 }
 

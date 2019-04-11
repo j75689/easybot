@@ -47,13 +47,14 @@ func HandlePushMessage(bot *linebot.Client) func(*gin.Context) {
 			err      error
 		)
 		if postdata, err = ioutil.ReadAll(c.Request.Body); err == nil {
+			logger.Info("[api] push ", c.Param("userID"))
 			if _, err = bot.PushMessage(c.Param("userID"), &config.CustomMessage{Msg: string(postdata)}).Do(); err == nil {
 				c.JSON(http.StatusOK, gin.H{"success": true})
 				return
 			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+		c.JSON(http.StatusOK, gin.H{"error": err})
 	}
 }
 

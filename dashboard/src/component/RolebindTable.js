@@ -21,9 +21,6 @@ import Button from "@material-ui/core/Button";
 import { lighten } from "@material-ui/core/styles/colorManipulator";
 import NewRoleAccountDialog from "./NewRoleAccountDialog";
 import api from "../lib/api";
-function deleteData(data) {
-  alert(data);
-}
 
 let counter = 0;
 function createData(account, scope, generate, expire, token) {
@@ -197,7 +194,14 @@ class RolebindTableToolbar extends React.Component {
             <Tooltip title="Delete">
               <IconButton
                 aria-label="Delete"
-                onClick={event => deleteData(this.props.selected)}
+                onClick={event => {
+                  let ok = window.confirm(
+                    `make sure delete [${this.props.selected}] ?`
+                  );
+                  if (ok) {
+                    this.props.delete();
+                  }
+                }}
               >
                 <DeleteIcon />
               </IconButton>
@@ -247,6 +251,7 @@ class RolebindTable extends React.Component {
     };
 
     this.RefreshAccount = this.RefreshAccount.bind(this);
+    this.DeleteAccount = this.DeleteAccount.bind(this);
   }
 
   componentDidMount() {
@@ -269,6 +274,19 @@ class RolebindTable extends React.Component {
         data: accounts
       });
     }
+  }
+
+  async DeleteAccount() {
+    let resp = await api.BatchDeleteServiceAccount(this.state.selected);
+    if (resp) {
+      if (resp.data.success) {
+        alert("Complete.");
+        this.setState({ selected: [] });
+      } else {
+        alert(`Error! ${JSON.stringify(resp.data.error)}`);
+      }
+    }
+    this.RefreshAccount();
   }
 
   handleRequestSort = (event, property) => {
@@ -333,6 +351,7 @@ class RolebindTable extends React.Component {
           numSelected={selected.length}
           selected={selected}
           refresh={this.RefreshAccount}
+          delete={this.DeleteAccount}
         />
         <div className={classes.tableWrapper}>
           <Table className={classes.table} aria-labelledby="tableTitle">
