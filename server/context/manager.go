@@ -20,7 +20,7 @@ import (
 func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 
-		if data, err := (*db).Load("config", c.Param("id")); err == nil {
+		if data, err := (*db).Load(config.MessageHandlerConfigTable, c.Param("id")); err == nil {
 			var messageConfig config.MessageHandlerConfig
 			b, _ := json.Marshal(data)
 			json.Unmarshal(b, &messageConfig)
@@ -37,7 +37,7 @@ func HandlePostConfig(db *store.Storage) func(*gin.Context) {
 		if configData, err := c.GetRawData(); err == nil {
 			var messageConfig config.MessageHandlerConfig
 			if err = json.Unmarshal(configData, &messageConfig); err == nil {
-				if err = (*db).Save("config", messageConfig.ID, messageConfig); err != nil {
+				if err = (*db).Save(config.MessageHandlerConfigTable, messageConfig.ID, messageConfig); err != nil {
 					logger.Errorf("Save config [%s] error: %s", messageConfig.ID, err.Error())
 				} else {
 					logger.Infof("Register config [%s]", messageConfig.ID)
@@ -60,7 +60,7 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 		var (
 			configID = c.Param("id")
 		)
-		if data, err := (*db).Load("config", configID); err == nil {
+		if data, err := (*db).Load(config.MessageHandlerConfigTable, configID); err == nil {
 			var messageConfig config.MessageHandlerConfig
 			if b, err := json.Marshal(data); err == nil {
 				if err = json.Unmarshal(b, &messageConfig); err != nil {

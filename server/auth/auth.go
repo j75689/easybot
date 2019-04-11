@@ -8,6 +8,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/j75689/easybot/model"
 )
 
 var (
@@ -32,11 +33,21 @@ type TokenInfo struct {
 	Expire      int64  `json:"expire"`
 }
 
+// ServiceAccountClaims custom claime
+type ServiceAccountClaims struct {
+	jwt.StandardClaims
+	Name     string
+	EMail    string
+	Domain   string
+	Provider string
+	Scope    string
+	Active   int
+}
+
 var (
 	defaultKey = []byte("easybot")
 	Options    = options{
 		tokenType:     "Bearer",
-		expired:       time.Duration(7200) * time.Second,
 		signingMethod: jwt.SigningMethodHS512,
 		signingKey:    defaultKey,
 		keyfunc: func(t *jwt.Token) (interface{}, error) {
@@ -52,10 +63,6 @@ func SetTokenType(tokenType string) {
 	Options.tokenType = tokenType
 }
 
-func SetExpired(duration time.Duration) {
-	Options.expired = duration
-}
-
 func SetSigningMethod(method *jwt.SigningMethodHMAC) {
 	Options.signingMethod = method
 }
@@ -65,17 +72,27 @@ func SetSigningKey(secret string) {
 }
 
 // GenerateToken create new jwt token
-func GenerateToken(userID, audience string) (*TokenInfo, error) {
+func GenerateToken(info *model.ServiceAccount) (*TokenInfo, error) {
 	now := time.Now()
-	expiresAt := now.Add(Options.expired).Unix()
+	claim := &ServiceAccountClaims{
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt:  now.Unix(),
+			NotBefore: now.Unix(),
+		},
+		Name:     info.Name,
+		EMail:    info.EMail,
+		Domain:   info.Domain,
+		Provider: info.Provider,
+		Scope:    info.Scope,
+		Active:   info.Active,
+	}
+	var expiresAt int64
+	if info.Active > 0 {
+		expiresAt = now.Add(time.Duration(info.Active) * time.Second).Unix()
+		claim.ExpiresAt = expiresAt
+	}
 
-	token := jwt.NewWithClaims(Options.signingMethod, &jwt.StandardClaims{
-		IssuedAt:  now.Unix(),
-		Audience:  audience,
-		ExpiresAt: expiresAt,
-		NotBefore: now.Unix(),
-		Subject:   userID,
-	})
+	token := jwt.NewWithClaims(Options.signingMethod, claim)
 
 	tokenString, err := token.SignedString(Options.signingKey)
 	if err != nil {
@@ -89,8 +106,8 @@ func GenerateToken(userID, audience string) (*TokenInfo, error) {
 }
 
 // ParseToken resolve TokenString to Info
-func ParseToken(tokenString string) (*jwt.StandardClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, Options.keyfunc)
+func ParseToken(tokenString string) (*ServiceAccountClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &ServiceAccountClaims{}, Options.keyfunc)
 	if err != nil {
 		if ve, ok := err.(*jwt.ValidationError); ok {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
@@ -109,19 +126,22 @@ func ParseToken(tokenString string) (*jwt.StandardClaims, error) {
 		return nil, ErrInvalidToken
 	}
 
-	return token.Claims.(*jwt.StandardClaims), nil
+	return token.Claims.(*ServiceAccountClaims), nil
 }
 
 func RefreshToken(tokenString string) (*TokenInfo, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, Options.keyfunc)
+	token, err := jwt.ParseWithClaims(tokenString, &ServiceAccountClaims{}, Options.keyfunc)
 	if err != nil {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
-		now := time.Now()
-		expiresAt := now.Add(Options.expired).Unix()
-		claims.ExpiresAt = time.Now().Add(Options.expired).Unix()
+	if claims, ok := token.Claims.(*ServiceAccountClaims); ok && token.Valid {
+		var expiresAt int64
+		if claims.Active > 0 {
+			now := time.Now()
+			expiresAt = now.Add(Options.expired).Unix()
+			claims.ExpiresAt = time.Now().Add(Options.expired).Unix()
+		}
 
 		token := jwt.NewWithClaims(Options.signingMethod, claims)
 		tokenString, err := token.SignedString(Options.signingKey)
@@ -139,7 +159,7 @@ func RefreshToken(tokenString string) (*TokenInfo, error) {
 }
 
 // GetTokenFromRequest get token info from http request
-func GetTokenFromRequest(request *http.Request) (*jwt.StandardClaims, error) {
+func GetTokenFromRequest(request *http.Request) (*ServiceAccountClaims, error) {
 	tokenString := request.Header.Get("Authorization")
 	prefix := fmt.Sprintf("%s ", Options.tokenType)
 	if tokenString != "" && strings.HasPrefix(tokenString, prefix) {

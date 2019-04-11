@@ -4,22 +4,28 @@ import Dashboard from "./pages/dashboard";
 import SignIn from "./pages/sign-in";
 import AccessRole from "./pages/access-role";
 import * as serviceWorker from "./serviceWorker";
-import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
+import {
+  BrowserRouter,
+  Switch,
+  Route,
+  Redirect,
+  useRouterHistory
+} from "react-router-dom";
 
+var base = document.getElementsByTagName("base")[0].href;
+base = base.substring(base.indexOf("//") + 2, base.length);
+if (base.indexOf("/") > -1) {
+  base = base.substring(base.indexOf("/"), base.length);
+}
+const basehref = base;
 class App extends Component {
   render() {
-    var loc = window.location;
-    var prefix = "";
-    if (loc.pathname.lastIndexOf("/") > -1) {
-      prefix = loc.pathname.substring(0, loc.pathname.lastIndexOf("/"));
-    }
-
     return (
       <>
         <Switch>
-          <Route exact path={prefix + "/dashboard"} component={Dashboard} />
-          <Route exact path={prefix + "/accessrole"} component={AccessRole} />
-          <Route exact path={prefix + "/login"} component={SignIn} />
+          <Route exact path="/dashboard" component={Dashboard} />
+          <Route exact path="/accessrole" component={AccessRole} />
+          <Route exact path="/login" component={SignIn} />
         </Switch>
       </>
     );
@@ -27,7 +33,7 @@ class App extends Component {
 }
 
 ReactDOM.render(
-  <BrowserRouter>
+  <BrowserRouter basename={basehref}>
     <App />
   </BrowserRouter>,
   document.getElementById("root")

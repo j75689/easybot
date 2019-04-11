@@ -44,6 +44,9 @@ func initServer() {
 	if appSecret == "" {
 		appSecret = appName
 	}
+	if context_path == "" {
+		context_path = "/"
+	}
 	if port == "" {
 		port = "8801"
 	}

@@ -15,7 +15,9 @@ func HandleIndexPage(context_path string) func(*gin.Context) {
 			c.Redirect(301, context_path+"dashboard")
 		}
 		c.Header("Content-Type", "text/html; charset=utf-8")
-		c.HTML(http.StatusOK, "index.html", gin.H{})
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"contextPath": context_path,
+		})
 	}
 }
 

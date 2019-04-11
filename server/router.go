@@ -67,8 +67,12 @@ func registerDashBoardRouter(app *gin.Engine) {
 	// page router
 	dashboard.GET("/", context.HandleIndexPage(context_path))
 	dashboard.GET("/dashboard", context.HandleIndexPage(context_path))
+	dashboard.GET("/accessrole", context.HandleIndexPage(context_path))
+	// login
 	dashboard.GET("/login", context.HandleIndexPage(context_path))
 	dashboard.POST("/login", context.HandleLogin(admin_user, admin_pass))
+	// accessrole
+	dashboard.POST("/role/account/:name", context.HandleCreateServiceAccount(&db))
 }
 
 func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, botClient *linebot.Client) {

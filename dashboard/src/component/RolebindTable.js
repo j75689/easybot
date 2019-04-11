@@ -25,11 +25,11 @@ function deleteData(data) {
 }
 
 let counter = 0;
-function createData(account, role, generate, expire, token) {
+function createData(account, scope, generate, expire, token) {
   counter += 1;
   return {
     account: account,
-    role: role,
+    scope: scope,
     generate: generate,
     expire: expire,
     token: token
@@ -69,7 +69,7 @@ const rows = [
     disablePadding: true,
     label: "Account Name"
   },
-  { id: "role", numeric: false, disablePadding: false, label: "Role" },
+  { id: "scope", numeric: false, disablePadding: false, label: "Scope" },
   { id: "generate", numeric: false, disablePadding: false, label: "Generate" },
   { id: "expire", numeric: false, disablePadding: false, label: "Expired" },
   { id: "token", numeric: false, disablePadding: false, label: "Token" },
@@ -353,7 +353,7 @@ class RolebindTable extends React.Component {
                       <TableCell component="th" scope="row" padding="none">
                         {n.account}
                       </TableCell>
-                      <TableCell align="left">{n.role}</TableCell>
+                      <TableCell align="left">{n.scope}</TableCell>
                       <TableCell align="left">{n.generate}</TableCell>
                       <TableCell align="left">{n.expire}</TableCell>
                       <TableCell align="left">{n.token}</TableCell>

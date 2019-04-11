@@ -188,7 +188,7 @@ class NewRoleAccountDialog extends React.Component {
                 margin="normal"
               />
               <FormControl margin="normal" className={classes.textField}>
-                <InputLabel htmlFor="role">Role</InputLabel>
+                <InputLabel htmlFor="scope">Scope</InputLabel>
                 <Select
                   required
                   multiple
@@ -215,7 +215,7 @@ class NewRoleAccountDialog extends React.Component {
                       this.setState({ selectedRole: e.target.value });
                     }
                   }}
-                  input={<Input id="role" />}
+                  input={<Input id="scope" />}
                   renderValue={selected =>
                     this.state.selectedRole.indexOf("all") > -1
                       ? "all"

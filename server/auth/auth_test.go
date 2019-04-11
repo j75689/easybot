@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/j75689/easybot/model"
 )
 
 func TestGenerateToken(t *testing.T) {
 	type args struct {
-		userID string
-		aud    string
+		info *model.ServiceAccount
 	}
 	tests := []struct {
 		name    string
@@ -21,15 +21,16 @@ func TestGenerateToken(t *testing.T) {
 		{
 			name: "TestGenerateToken",
 			args: args{
-				userID: "Test",
-				aud:    "User",
+				info: &model.ServiceAccount{
+					Name: "Test",
+				},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenerateToken(tt.args.userID, tt.args.aud)
+			got, err := GenerateToken(tt.args.info)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GenerateToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -37,13 +38,10 @@ func TestGenerateToken(t *testing.T) {
 			if token, err := ParseToken(got.AccessToken); err != nil {
 				t.Errorf("ParseToken [%v] error: %v", got, err)
 			} else {
-				if token.Subject != tt.args.userID {
-					t.Errorf("UserID not match origin:[%s] parse:[%s]", tt.args.userID, token.Subject)
+				if token.Name != tt.args.info.Name {
+					t.Errorf("Name not match origin:[%s] parse:[%s]", tt.args.info.Name, token.Name)
 				}
 
-				if token.Audience != tt.args.aud {
-					t.Errorf("Audience not match origin:[%s] parse:[%s]", tt.args.aud, token.Audience)
-				}
 			}
 
 		})
@@ -57,7 +55,7 @@ func TestGetTokenFromRequest(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *jwt.StandardClaims
+		want    *ServiceAccountClaims
 		wantErr bool
 	}{
 		{
@@ -69,7 +67,7 @@ func TestGetTokenFromRequest(t *testing.T) {
 					},
 				},
 			},
-			want:    &jwt.StandardClaims{Subject: "Test"},
+			want:    &ServiceAccountClaims{StandardClaims: jwt.StandardClaims{Subject: "Test"}},
 			wantErr: false,
 		},
 	}
