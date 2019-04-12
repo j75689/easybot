@@ -22,9 +22,16 @@ import { lighten } from "@material-ui/core/styles/colorManipulator";
 import NewRoleAccountDialog from "./NewRoleAccountDialog";
 import api from "../lib/api";
 
-let counter = 0;
+const copyToClipboard = data => {
+  const textField = document.createElement("textarea");
+  textField.innerText = data;
+  document.body.appendChild(textField);
+  textField.select();
+  document.execCommand("copy");
+  textField.remove();
+};
+
 function createData(account, scope, generate, expire, token) {
-  counter += 1;
   return {
     account: account,
     scope: scope,
@@ -245,7 +252,15 @@ class RolebindTable extends React.Component {
       order: "asc",
       orderBy: "calories",
       selected: [],
-      data: [],
+      data: [
+        createData(
+          "mock",
+          "all",
+          "2019-04-12",
+          "no expiry",
+          "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1NTQ5NzkxMzIsIm5iZiI6MTU1NDk3OTEzMiwiTmFtZSI6Imh5bGliIiwiRU1haWwiOiJrMDBAaHl3ZWIuY29tLnR3IiwiRG9tYWluIjoiaHl3ZWIuY29tLnR3IiwiUHJvdmlkZXIiOiJoeXdlYiIsIlNjb3BlIjoiYWxsIiwiQWN0aXZlIjowfQ.kxCQ9bhZuZHjtgbrCjh946Ynr7eRjQIKsYgGREKArPzgdt0DWrAJDMVVEHxk46H_6t7R73QrBrWlDrUUdxEa3Q"
+        )
+      ],
       page: 0,
       rowsPerPage: 5
     };
@@ -264,7 +279,10 @@ class RolebindTable extends React.Component {
     if (resp) {
       resp.data.map(item => {
         let generate = new Date(item.generate * 1000).toISOString();
-        let expired = new Date(item.expired * 1000).toISOString();
+        let expired =
+          item.expired > 0
+            ? new Date(item.expired * 1000).toISOString()
+            : "no expiry";
         accounts.push(
           createData(item.name, item.scope, generate, expired, item.token)
         );
@@ -389,8 +407,19 @@ class RolebindTable extends React.Component {
                       <TableCell align="left">{n.scope}</TableCell>
                       <TableCell align="left">{n.generate}</TableCell>
                       <TableCell align="left">{n.expire}</TableCell>
-                      <TableCell align="left">{n.token}</TableCell>
-                      <TableCell agent="left">
+                      <TableCell style={{ maxWidth: "50px" }} align="left">
+                        <div
+                          onClick={e => {
+                            copyToClipboard(n.token);
+                            alert("copied.");
+                          }}
+                        >
+                          {n.token.length > 30
+                            ? `${n.token.substring(0, 30)}...`
+                            : n.token}
+                        </div>
+                      </TableCell>
+                      <TableCell align="right">
                         <Button
                           color="primary"
                           className={classes.button}
