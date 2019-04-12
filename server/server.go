@@ -76,7 +76,7 @@ func initServer() {
 	// init plugin
 	plugin.Load(plugin_path, log.GetLogger())
 
-	logger.Info("[Init] ", "db driver:", db_driver)
+	logger.Info("[Init] ", "Use DB driver:", db_driver)
 	// init db
 	var err error
 	db, err = store.NewStoreage(db_driver, &store.Connection{
@@ -89,7 +89,7 @@ func initServer() {
 	if err != nil {
 		logger.Fatal("[Init] ", err.Error())
 	}
-	logger.Info("[Init] ", "load config")
+	logger.Info("[Init] ", "Load config")
 	// init config
 	if err = db.LoadAll("config", func(key string, value interface{}) {
 		if b, err := json.Marshal(value); err == nil {
@@ -104,7 +104,7 @@ func initServer() {
 	}); err != nil {
 		logger.Error("[Init] ", err)
 	}
-	logger.Info("[Init] ", "Auth module")
+	logger.Info("[Init] ", "Setting Auth module")
 	// init Auth module
 	auth.SetSigningKey(appSecret)
 }

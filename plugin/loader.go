@@ -20,7 +20,7 @@ var (
 
 func Load(path string, log *zap.SugaredLogger) {
 	logger = log
-	logger.Info("[Init] ", "load plugin")
+	logger.Info("[Init] ", "Load plugin")
 	// add default plugin
 	{
 		graphql := PluginFunc(Graphql)

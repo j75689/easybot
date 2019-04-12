@@ -76,6 +76,65 @@ const api = {
     } catch (err) {
       console.log(err);
     }
+  },
+  async GetServiceAccount(name) {
+    try {
+      let res = await service.get("/role/account/" + name);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async SaveServiceAccount(name, data) {
+    try {
+      let res = await service.put(
+        "/role/account/" + name,
+        querystring.stringify(data)
+      );
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async RefreshServiceAccountToken(name) {
+    try {
+      let res = await service.post(`/role/account/${name}/refresh`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async GetScopeTags() {
+    try {
+      let res = await service.get(`/role/scope`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 };
 

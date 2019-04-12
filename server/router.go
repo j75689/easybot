@@ -76,9 +76,13 @@ func registerDashBoardRouter(app *gin.Engine) {
 	// plugin
 	dashboard.POST("/plugin/:plugin", context.HandleTestPlugin())
 	// accessrole
+	dashboard.GET("role/scope", context.HandleGetScopeTags())
 	dashboard.GET("/role/account", context.HandleGetAllServiceAccount(&db))
 	dashboard.DELETE("/role/account", context.HandleBatchDeleteServiceAccount(&db))
+	dashboard.GET("/role/account/:name", context.HandleGetServiceAccount(&db))
+	dashboard.PUT("/role/account/:name", context.HandleSaveServiceAccount(&db))
 	dashboard.POST("/role/account/:name", context.HandleCreateServiceAccount(&db))
+	dashboard.POST("/role/account/:name/refresh", context.HandleRefreshServiceAccountToken(&db))
 }
 
 func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, botClient *linebot.Client) {
