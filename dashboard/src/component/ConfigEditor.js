@@ -13,10 +13,10 @@ import Select from "@material-ui/core/Select";
 import "brace";
 import "brace/mode/json";
 import "brace/theme/github";
-
 import { JsonEditor as Editor } from "jsoneditor-react";
 import "jsoneditor-react/es/editor.min.css";
 import "../css/jsoneditor.css";
+import api from "../lib/api";
 
 const styles = theme => ({
   root: {
@@ -34,12 +34,25 @@ const styles = theme => ({
 
 class ConfigEditor extends React.Component {
   state = {
-    age: "",
-    name: "hai",
-    labelWidth: 0
+    selectEvent: "",
+    selectConfigID: "",
+    configs: {}
   };
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.fetchConfigID();
+  }
+
+  async fetchConfigID() {
+    let resp = await api.GetAllConfigIDs();
+    if (resp) {
+      if (resp.data) {
+        this.setState({
+          configs: resp.data
+        });
+      }
+    }
+  }
 
   handleChange = event => {
     this.setState({ [event.target.name]: event.target.value });
@@ -53,8 +66,13 @@ class ConfigEditor extends React.Component {
         <form className={classes.root} autoComplete="off">
           <FormControl className={classes.formControl}>
             <Select
-              value={this.state.age}
-              onChange={this.handleChange}
+              value={this.state.selectEvent}
+              onChange={e => {
+                this.setState({
+                  selectEvent: e.target.value,
+                  selectConfigID: ""
+                });
+              }}
               name="event"
               displayEmpty
               className={classes.selectEmpty}
@@ -62,13 +80,20 @@ class ConfigEditor extends React.Component {
               <MenuItem value="" disabled>
                 Choose
               </MenuItem>
+              {Object.keys(this.state.configs).map(key => {
+                return <MenuItem value={key}>{key}</MenuItem>;
+              })}
             </Select>
             <FormHelperText>Event </FormHelperText>
           </FormControl>
           <FormControl className={classes.formControl}>
             <Select
-              value={this.state.age}
-              onChange={this.handleChange}
+              value={this.state.selectConfigID}
+              onChange={e => {
+                this.setState({
+                  selectConfigID: e.target.value
+                });
+              }}
               name="configID"
               displayEmpty
               className={classes.selectEmpty}
@@ -76,9 +101,10 @@ class ConfigEditor extends React.Component {
               <MenuItem value="" disabled>
                 Choose
               </MenuItem>
-              <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem>
+              {this.state.selectEvent &&
+                this.state.configs[this.state.selectEvent].map(item => {
+                  return <MenuItem value={item}>{item}</MenuItem>;
+                })}
             </Select>
             <FormHelperText>Config </FormHelperText>
           </FormControl>

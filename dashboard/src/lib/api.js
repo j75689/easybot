@@ -135,6 +135,20 @@ const api = {
     } catch (err) {
       console.log(err);
     }
+  },
+  async GetAllConfigIDs() {
+    try {
+      let res = await service.get(`/handler/config`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 };
 
