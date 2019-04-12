@@ -36,10 +36,10 @@ func initRouter() (router *gin.Engine) {
 		if bot, err := handler.NewClient(); err == nil {
 			registerAPIRouter(router, handler, bot)
 		} else {
-			logger.Error(err)
+			logger.Error("[Init] ", err)
 		}
 	} else {
-		logger.Error(err)
+		logger.Error("[Init] ", err)
 	}
 
 	return
@@ -48,11 +48,11 @@ func initRouter() (router *gin.Engine) {
 func registerDashBoardRouter(app *gin.Engine) {
 	// static file
 	if _, err := os.Stat("dashboard/build"); err == nil {
-		logger.Info("Serve dashboard/build")
+		logger.Info("[Init] ", "Serve dashboard/build")
 		app.LoadHTMLGlob("./dashboard/build/index.html")
 		app.Static("/public", "dashboard/build")
 	} else {
-		logger.Info("Serve rice")
+		logger.Info("[Init] ", "Serve rice")
 		app.HTMLRender = gorice.New(rice.MustFindBox("../dashboard/build"))
 		dist := rice.MustFindBox("../dashboard/build")
 		app.StaticFS("/public", dist.HTTPBox())

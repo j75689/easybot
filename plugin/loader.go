@@ -20,7 +20,7 @@ var (
 
 func Load(path string, log *zap.SugaredLogger) {
 	logger = log
-	logger.Info("load plugin")
+	logger.Info("[Init] ", "load plugin")
 	// add default plugin
 	{
 		graphql := PluginFunc(Graphql)
@@ -45,7 +45,7 @@ func load(path string) {
 	// 讀取目錄
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		logger.Error(err)
+		logger.Error("[Init] ", err)
 		return
 	}
 
@@ -64,13 +64,13 @@ func load(path string) {
 
 			p, err := plugin.Open(path + f.Name())
 			if err != nil {
-				logger.Error(err)
+				logger.Error("[Init] ", err)
 				continue
 			}
 
 			function, err := p.Lookup(runFuncName)
 			if err != nil {
-				logger.Error(err)
+				logger.Error("[Init] ", err)
 				continue
 			}
 
@@ -78,7 +78,7 @@ func load(path string) {
 				ff := PluginFunc(f)
 				pluginfuncs.Store(runFuncName, &ff)
 			} else {
-				logger.Errorf("load plugin [%s] failed.\n", runFuncName)
+				logger.Errorf("[Init] load plugin [%s] failed.\n", runFuncName)
 			}
 
 		}

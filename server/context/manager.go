@@ -38,9 +38,9 @@ func HandlePostConfig(db *store.Storage) func(*gin.Context) {
 			var messageConfig config.MessageHandlerConfig
 			if err = json.Unmarshal(configData, &messageConfig); err == nil {
 				if err = (*db).Save(config.MessageHandlerConfigTable, messageConfig.ID, messageConfig); err != nil {
-					logger.Errorf("Save config [%s] error: %s", messageConfig.ID, err.Error())
+					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ID, err.Error())
 				} else {
-					logger.Infof("Register config [%s]", messageConfig.ID)
+					logger.Infof("[dashboard] Register config [%s]", messageConfig.ID)
 					messagehandler.RegisterConfig(&messageConfig)
 					c.JSON(200, gin.H{"message": "success."})
 				}
@@ -64,11 +64,11 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 			var messageConfig config.MessageHandlerConfig
 			if b, err := json.Marshal(data); err == nil {
 				if err = json.Unmarshal(b, &messageConfig); err != nil {
-					logger.Error(err.Error())
+					logger.Error("[dashboard] ", err.Error())
 				} else {
-					logger.Infof("Deregister config [%s]", messageConfig.ID)
+					logger.Infof("[dashboard] Deregister config [%s]", messageConfig.ID)
 					if err = messagehandler.DeregisterConfig(&messageConfig); err != nil {
-						logger.Error(err.Error())
+						logger.Error("[dashboard] ", err.Error())
 					}
 				}
 			}
@@ -78,7 +78,7 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 			return
 		}
 		if err := (*db).Delete("config", configID); err != nil {
-			logger.Errorf("Delete config [%s] error: %s", configID, err.Error())
+			logger.Errorf("[dashboard] Delete config [%s] error: %s", configID, err.Error())
 			c.JSON(200, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(200, gin.H{"message": "success."})
@@ -93,18 +93,18 @@ func HandleTestRunner() func(*gin.Context) {
 		defer c.Done()
 		postdata, err := ioutil.ReadAll(c.Request.Body)
 		if err != nil {
-			logger.Error(err)
+			logger.Error("[dashboard] ", err)
 			return
 		}
 		var arg linebot.Event
 		err = json.Unmarshal(postdata, &arg)
 		if err != nil {
-			logger.Error(err)
+			logger.Error("[dashboard] ", err)
 		}
-		logger.Debug(structs.Map(arg))
+		logger.Debug("[dashboard] ", structs.Map(arg))
 		reply, err := messagehandler.Execute(&arg)
 		if err != nil {
-			logger.Debug(err)
+			logger.Debug("[dashboard] ", err)
 		}
 
 		c.JSON(200, reply)
@@ -126,23 +126,23 @@ func HandleTestPlugin() func(*gin.Context) {
 
 		postdata, err := ioutil.ReadAll(c.Request.Body)
 		if err != nil {
-			logger.Error(err)
+			logger.Error("[dashboard] ", err)
 			return
 		}
 
 		var arg = args{}
 		err = json.Unmarshal(postdata, &arg)
 		if err != nil {
-			logger.Error(err)
+			logger.Error("[dashboard] ", err)
 		}
-		logger.Debug(arg)
+		logger.Debug("[dashboard] ", arg)
 		var b []byte
 		if b, err = json.Marshal(arg.Input); err != nil {
-			logger.Error(err.Error())
+			logger.Error("[dashboard] ", err.Error())
 		}
 		ParamData := util.ReplaceVariables(string(b), arg.Variables)
 		if err = json.Unmarshal([]byte(ParamData), &arg.Input); err != nil {
-			logger.Error(err.Error())
+			logger.Error("[dashboard] ", err.Error())
 		}
 		v, next, err := plugin.Excute(pluginName, arg.Input, arg.Variables)
 

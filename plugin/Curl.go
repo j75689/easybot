@@ -38,7 +38,7 @@ type CurlPluginOutputConfig struct {
 }
 
 func Curl(input interface{}, variables map[string]interface{}, logger *zap.SugaredLogger) (map[string]interface{}, bool, error) {
-	logger.Info("Excute Curl Plugin")
+	logger.Info("[plugin] ", "Excute Curl Plugin")
 	var (
 		config = CurlPluginConfig{
 			Method:      http.MethodGet,
@@ -55,7 +55,7 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 
 	err = json.Unmarshal(util.GetJSONBytes(input), &config)
 	if err != nil {
-		logger.Error(err)
+		logger.Error("[plugin] ", err)
 		return nil, next, err
 	}
 
@@ -66,7 +66,7 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 			return http.ErrUseLastResponse
 		}
 	)
-	logger.Debug("timeout: ", config.Timeout)
+	logger.Debug("[plugin] ", "timeout: ", config.Timeout)
 	client := &http.Client{
 		Timeout: time.Duration(config.Timeout) * time.Second,
 	}
@@ -76,9 +76,9 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 
 	if config.ProxyURL != "" {
 		proxyURL, err := url.Parse(config.ProxyURL)
-		logger.Debug("proxyURL: ", proxyURL)
+		logger.Debug("[plugin] ", "proxyURL: ", proxyURL)
 		if err != nil {
-			logger.Error("parse ProxyURL error: ", err)
+			logger.Error("[plugin] ", "parse ProxyURL error: ", err)
 		}
 		proxy = http.ProxyURL(proxyURL)
 
@@ -96,7 +96,7 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 	// Request
 	req, err := http.NewRequest(config.Method, config.URL, strings.NewReader(config.PostData))
 	if err != nil {
-		logger.Error("NewRequest", err)
+		logger.Error("[plugin] ", "NewRequest", err)
 	}
 	for k, v := range config.Header {
 		req.Header.Set(k, v)
@@ -114,11 +114,11 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 		req.SetBasicAuth(config.Username, config.Password)
 	}
 
-	logger.Debug(req)
+	logger.Debug("[plugin] ", req)
 
 	response, err := client.Do(req)
 	if err != nil {
-		logger.Error("request error: ", err)
+		logger.Error("[plugin] ", "request error: ", err)
 		return variables, next, err
 	}
 	defer response.Body.Close()
@@ -136,7 +136,7 @@ func Curl(input interface{}, variables map[string]interface{}, logger *zap.Sugar
 
 	body, err = ioutil.ReadAll(reader)
 	if err != nil {
-		logger.Error("client error: ", err)
+		logger.Error("[plugin] ", "client error: ", err)
 		return variables, next, err
 	}
 

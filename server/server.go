@@ -76,7 +76,7 @@ func initServer() {
 	// init plugin
 	plugin.Load(plugin_path, log.GetLogger())
 
-	logger.Infof("init db driver:[%s]", db_driver)
+	logger.Info("[Init] ", "db driver:", db_driver)
 	// init db
 	var err error
 	db, err = store.NewStoreage(db_driver, &store.Connection{
@@ -87,24 +87,24 @@ func initServer() {
 		Pass:   db_pass,
 	})
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatal("[Init] ", err.Error())
 	}
-	logger.Info("init config")
+	logger.Info("[Init] ", "load config")
 	// init config
 	if err = db.LoadAll("config", func(key string, value interface{}) {
 		if b, err := json.Marshal(value); err == nil {
 			var cfg config.MessageHandlerConfig
 			if err = json.Unmarshal(b, &cfg); err == nil {
 				handler.RegisterConfig(&cfg)
-				logger.Infof("Register config [%s]", key)
+				logger.Infof("[Init] Register config [%s]", key)
 			} else {
-				logger.Errorf("Unmarshal config [%s] error: %v", key, err)
+				logger.Errorf("[Init] Unmarshal config [%s] error: %v", key, err)
 			}
 		}
 	}); err != nil {
-		logger.Error(err)
+		logger.Error("[Init] ", err)
 	}
-	logger.Info("init Auth module")
+	logger.Info("[Init] ", "Auth module")
 	// init Auth module
 	auth.SetSigningKey(appSecret)
 }
@@ -112,9 +112,9 @@ func initServer() {
 // Start 啟動服務
 func Start(mode string) {
 	initServer()
-	logger.Infof("Service start on localhost:%s", port)
+	logger.Info("[Init] ", "Service start on localhost:", port)
 	if err := initRouter().Run(fmt.Sprintf(":%s", port)); err != nil {
-		logger.Error(err)
+		logger.Error("[Init] ", err)
 	}
 
 }

@@ -20,17 +20,16 @@ func HandleLineHook(handler *httphandler.WebhookHandler, bot *linebot.Client) fu
 	// Setup HTTP Server for receiving requests from LINE platform
 	handler.HandleEvents(func(events []*linebot.Event, r *http.Request) {
 
-		logger.Debug(r)
 		for _, event := range events {
-			logger.Debug(structs.Map(event))
+			logger.Debug("[bot] ", structs.Map(event))
 			if msg, err := messagehandler.Execute(event); msg != nil {
 				if err != nil {
-					logger.Warn(err)
+					logger.Warn("[bot] ", err)
 				}
 				msgData, _ := msg.MarshalJSON()
-				logger.Debug(string(msgData))
+				logger.Debug("[bot] ", string(msgData))
 				if _, err = bot.ReplyMessage(event.ReplyToken, msg).Do(); err != nil {
-					logger.Error(err)
+					logger.Error("[bot] ", err)
 				}
 			}
 		}
@@ -47,7 +46,7 @@ func HandlePushMessage(bot *linebot.Client) func(*gin.Context) {
 			err      error
 		)
 		if postdata, err = ioutil.ReadAll(c.Request.Body); err == nil {
-			logger.Info("[api] push ", c.Param("userID"))
+			logger.Info("[api] ", "push ", c.Param("userID"))
 			if _, err = bot.PushMessage(c.Param("userID"), &config.CustomMessage{Msg: string(postdata)}).Do(); err == nil {
 				c.JSON(http.StatusOK, gin.H{"success": true})
 				return
@@ -77,7 +76,7 @@ func HandleMulticastMessage(bot *linebot.Client) func(*gin.Context) {
 					if msg, err := json.Marshal(data); err == nil {
 						Messages = append(Messages, &config.CustomMessage{Msg: string(msg)})
 					} else {
-						logger.Error("Muticast Cause Error: ", err)
+						logger.Error("[api] ", "Muticast Cause Error: ", err)
 					}
 				}
 

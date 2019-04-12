@@ -18,7 +18,7 @@ type GraphqlPluginConfig struct {
 }
 
 func Graphql(input interface{}, variables map[string]interface{}, logger *zap.SugaredLogger) (map[string]interface{}, bool, error) {
-	logger.Info("Excute Graphql Plugin")
+	logger.Info("[plugin] ", "Excute Graphql Plugin")
 	var (
 		config GraphqlPluginConfig
 		next   = true
@@ -27,11 +27,11 @@ func Graphql(input interface{}, variables map[string]interface{}, logger *zap.Su
 
 	err = json.Unmarshal(util.GetJSONBytes(input), &config)
 	if err != nil {
-		logger.Error(err)
+		logger.Error("[plugin] ", err)
 		return nil, next, err
 	}
 
-	logger.Debug(config)
+	logger.Debug("[plugin] ", config)
 
 	client := graphql.NewClient(config.APIURL)
 
@@ -48,13 +48,13 @@ func Graphql(input interface{}, variables map[string]interface{}, logger *zap.Su
 	err = client.Run(ctx, req, &resp)
 
 	if err != nil {
-		logger.Error(err)
+		logger.Error("[plugin] ", err)
 	}
 
 	for k, v := range config.Output {
 		variables[k] = util.GetJSONValue(v, resp)
 	}
 
-	logger.Debug(resp)
+	logger.Debug("[plugin] ", resp)
 	return variables, next, err
 }

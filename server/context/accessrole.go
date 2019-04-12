@@ -25,17 +25,23 @@ func HandleGetAllServiceAccount(db *store.Storage) func(*gin.Context) {
 				json.Unmarshal(data, &account)
 				accounts = append(accounts, account)
 			} else {
-				logger.Errorf("unmarshal account [%v] error [%v]", key, err)
+				logger.Errorf("[dashboard] unmarshal account [%v] error [%v]", key, err)
 			}
 		})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
-				"error": err,
+				"error": err.Error(),
 			})
 			return
 		}
 		c.JSON(http.StatusOK, accounts)
 
+	}
+}
+
+// HandleGetServiceAccount process get service account info
+func HandleGetServiceAccount(db *store.Storage) func(*gin.Context) {
+	return func(c *gin.Context) {
 	}
 }
 
@@ -64,7 +70,7 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 		}
 		token, err := auth.GenerateToken(account)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"success": false, "error": err})
+			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 			return
 		}
 		account.Generate = time.Now().Unix()
@@ -72,7 +78,7 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 		account.Expired = token.Expire
 
 		if err := (*db).Save(config.ServiceAccountTable, name, account); err != nil {
-			c.JSON(http.StatusOK, gin.H{"success": false, "error": err})
+			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{
@@ -90,14 +96,14 @@ func HandleBatchDeleteServiceAccount(db *store.Storage) func(*gin.Context) {
 		formdata, _ := ioutil.ReadAll(c.Request.Body)
 		err := json.Unmarshal(formdata, &accounts)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"success": false, "error": err})
+			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 			return
 		}
 
 		for _, account := range accounts {
 			err = (*db).Delete(config.ServiceAccountTable, account)
 			if err != nil {
-				logger.Error("delete account [%s] error [%v]", account, err)
+				logger.Error("[dashboard] delete account [%s] error [%v]", account, err.Error())
 			}
 		}
 
