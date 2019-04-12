@@ -52,21 +52,6 @@ const styles = theme => ({
   }
 });
 
-const roles = [
-  {
-    value: "all",
-    label: "All"
-  },
-  {
-    value: "push",
-    label: "Push"
-  },
-  {
-    value: "multicast",
-    label: "Multicast"
-  }
-];
-
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -83,13 +68,40 @@ class NewRoleAccountDialog extends React.Component {
     super(props);
     this.state = {
       open: false,
-      selectedRole: ["all", "push", "multicast"],
+      roles: [
+        {
+          value: "all",
+          label: "All"
+        }
+      ],
+      selectedRole: ["all"],
       account: "",
       email: "",
       domain: "",
       provider: "",
       active: "7200"
     };
+
+    this.fetchRoles = this.fetchRoles.bind(this);
+  }
+
+  componentDidMount() {
+    this.fetchRoles();
+  }
+
+  async fetchRoles() {
+    let resp = await api.GetScopeTags();
+    if (resp) {
+      let roles = [...this.state.roles, ...resp.data];
+      let selected = [];
+      roles.map(item => {
+        selected.push(item.value);
+      });
+      this.setState({
+        roles: roles,
+        selectedRole: selected
+      });
+    }
   }
 
   handleClickOpen = () => {
@@ -116,15 +128,14 @@ class NewRoleAccountDialog extends React.Component {
     if (resp) {
       if (resp.data.success) {
         alert("Create new account [" + data.name + "]");
+        this.handleClose();
+        this.props.refresh();
       } else {
-        alert("Falid ");
+        alert(resp.data.error);
       }
     } else {
       alert("Error!");
     }
-    this.props.refresh();
-
-    this.handleClose();
   }
 
   render() {
@@ -241,7 +252,7 @@ class NewRoleAccountDialog extends React.Component {
                       this.state.selectedRole.indexOf("all") == -1
                     ) {
                       var all = [];
-                      roles.map(obj => {
+                      this.state.roles.map(obj => {
                         all.push(obj.value);
                       });
                       this.setState({ selectedRole: all });
@@ -265,7 +276,7 @@ class NewRoleAccountDialog extends React.Component {
                   }
                   MenuProps={MenuProps}
                 >
-                  {roles.map(role => (
+                  {this.state.roles.map(role => (
                     <MenuItem key={role.label} value={role.value}>
                       <Checkbox
                         checked={
