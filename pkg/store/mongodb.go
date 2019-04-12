@@ -20,12 +20,12 @@ type MongoDB struct {
 func (db *MongoDB) Save(collection string, key string, data interface{}) (err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	filter := bson.M{"id": key}
+	filter := bson.M{"key": key}
 	if _, err := db.Load(collection, key); err != nil {
-		_, err = coll.InsertOne(ctx, data)
+		_, err = coll.InsertOne(ctx, bson.M{"key": key, "data": data})
 	} else {
 		update := bson.D{
-			{"$set", data},
+			{"$set", bson.M{"data": data}},
 		}
 		_, err = coll.UpdateMany(ctx, filter, update)
 	}
@@ -48,10 +48,11 @@ func (db *MongoDB) LoadAll(collection string, callback func(key string, value in
 		if err != nil {
 			continue
 		}
-		key := result["id"]
-		if key != nil {
+		key := result["key"]
+		data := result["data"]
+		if key != nil && data != nil {
 			if id, ok := key.(string); ok {
-				callback(id, result)
+				callback(id, data)
 			}
 		}
 	}
@@ -62,16 +63,16 @@ func (db *MongoDB) LoadAll(collection string, callback func(key string, value in
 func (db *MongoDB) Load(collection string, key string) (data interface{}, err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 
-	filter := bson.M{"id": key}
+	filter := bson.M{"key": key}
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	var d map[string]interface{}
 	err = coll.FindOne(ctx, filter).Decode(&d)
 
-	return d, err
+	return d["data"], err
 }
 func (db *MongoDB) Delete(collection string, key string) (err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
-	filter := bson.M{"id": key}
+	filter := bson.M{"key": key}
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	_, err = coll.DeleteMany(ctx, filter)
 	return

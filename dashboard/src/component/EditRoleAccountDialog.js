@@ -112,6 +112,12 @@ class EditRoleAccountDialog extends React.Component {
     if (resp) {
       if (resp.data) {
         let scope = resp.data.scope.split(",");
+        if (scope.indexOf("all") > -1) {
+          scope = [];
+          this.state.roles.map(item => {
+            scope.push(item.value);
+          });
+        }
 
         this.setState({
           account: resp.data.name,

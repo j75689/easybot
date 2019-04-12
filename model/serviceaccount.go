@@ -7,7 +7,7 @@ import (
 
 // ServiceAccount api access token account
 type ServiceAccount struct {
-	Name     string `json:"name" bson:"id"`
+	Name     string `json:"name" bson:"name"`
 	EMail    string `json:"email" bson:"email"`
 	Domain   string `json:"domain" bson:"domain"`
 	Provider string `json:"provider" bson:"provider"`

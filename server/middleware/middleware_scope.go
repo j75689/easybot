@@ -46,8 +46,8 @@ func ScopeMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.HandlerFun
 						c.JSON(http.StatusForbidden, gin.H{"error": "Permission denied"})
 						c.Abort()
 					}
-
 				} else {
+					logger.Errorf("[scope] Token info not match account [%v]", account)
 					c.JSON(http.StatusForbidden, gin.H{"error": "Token info invalid"})
 					c.Abort()
 				}

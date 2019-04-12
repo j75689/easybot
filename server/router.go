@@ -32,15 +32,20 @@ func initRouter() (router *gin.Engine) {
 	registerDashBoardRouter(router)
 
 	// Register API
-	if handler, err := httphandler.New(channel_secret, channel_token); err == nil {
-		if bot, err := handler.NewClient(); err == nil {
-			registerAPIRouter(router, handler, bot)
-		} else {
+	var (
+		lineHandler *httphandler.WebhookHandler
+		lineBot     *linebot.Client
+	)
+	lineHandler, err := httphandler.New(channel_secret, channel_token)
+	if err != nil {
+		logger.Error("[Init] ", err)
+	} else {
+		if lineBot, err = lineHandler.NewClient(); err != nil {
 			logger.Error("[Init] ", err)
 		}
-	} else {
-		logger.Error("[Init] ", err)
 	}
+
+	registerAPIRouter(router, lineHandler, lineBot)
 
 	return
 }
