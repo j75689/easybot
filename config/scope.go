@@ -21,18 +21,23 @@ var Scope = ScopeDefinition{
 	},
 }
 
+// ScopeTag scope info
 type ScopeTag string
 
+// Label for scope
 func (tag *ScopeTag) Label() string {
 	return strings.Title(string(*tag))
 }
 
+// Value for scope
 func (tag *ScopeTag) Value() string {
 	return string(*tag)
 }
 
+// ScopePath allow paths
 type ScopePath []string
 
+// Match router path
 func (paths *ScopePath) Match(path string) bool {
 	for _, p := range *paths {
 		var replacer = regexp.MustCompile(`:[\w]*`)
@@ -44,12 +49,23 @@ func (paths *ScopePath) Match(path string) bool {
 	return false
 }
 
+// ScopeDefinition define scope
 type ScopeDefinition map[ScopeTag]ScopePath
 
-func (scope *ScopeDefinition) Tags() []struct{ Label, Value string } {
-	tags := []struct{ Label, Value string }{}
+// Tags scope show info
+func (scope *ScopeDefinition) Tags() []struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+} {
+	tags := []struct {
+		Label string `json:"label"`
+		Value string `json:"value"`
+	}{}
 	for key, _ := range *scope {
-		tags = append(tags, struct{ Label, Value string }{Label: key.Label(), Value: key.Value()})
+		tags = append(tags, struct {
+			Label string `json:"label"`
+			Value string `json:"value"`
+		}{Label: key.Label(), Value: key.Value()})
 	}
 	return tags
 }
