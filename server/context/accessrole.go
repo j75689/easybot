@@ -116,6 +116,7 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 		var (
 			account   model.ServiceAccount
 			name      = c.Param("name")
+			newName   = c.DefaultPostForm("name", name)
 			email     = c.DefaultPostForm("email", "")
 			domain    = c.DefaultPostForm("domain", "")
 			provider  = c.DefaultPostForm("provider", "")
@@ -132,6 +133,7 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 		if data, err := json.Marshal(value); err == nil {
 			active, _ = strconv.Atoi(activeStr)
 			json.Unmarshal(data, &account)
+			account.Name = newName
 			account.EMail = email
 			account.Domain = domain
 			account.Provider = provider
@@ -146,7 +148,12 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 			account.Token = token.AccessToken
 			account.Expired = token.Expire
 
-			if err := (*db).Save(config.ServiceAccountTable, name, account); err != nil {
+			// nmae changed
+			if name != newName {
+				(*db).Delete(config.ServiceAccountTable, name)
+			}
+
+			if err := (*db).Save(config.ServiceAccountTable, newName, account); err != nil {
 				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 				return
 			}

@@ -20,6 +20,7 @@ import PlayListAddIcon from "@material-ui/icons/PlaylistAdd";
 import Button from "@material-ui/core/Button";
 import { lighten } from "@material-ui/core/styles/colorManipulator";
 import NewRoleAccountDialog from "./NewRoleAccountDialog";
+import EditRoleAccountDialog from "./EditRoleAccountDialog";
 import api from "../lib/api";
 
 const copyToClipboard = data => {
@@ -426,13 +427,10 @@ class RolebindTable extends React.Component {
                         </div>
                       </TableCell>
                       <TableCell align="right">
-                        <Button
-                          color="primary"
-                          className={classes.button}
-                          onClick={e => {}}
-                        >
-                          Edit
-                        </Button>
+                        <EditRoleAccountDialog
+                          account={n.account}
+                          refresh={this.RefreshAccount}
+                        />
                       </TableCell>
                     </TableRow>
                   );

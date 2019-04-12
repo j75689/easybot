@@ -63,7 +63,7 @@ const MenuProps = {
   }
 };
 
-class NewRoleAccountDialog extends React.Component {
+class EditRoleAccountDialog extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -83,6 +83,8 @@ class NewRoleAccountDialog extends React.Component {
     };
 
     this.fetchRoles = this.fetchRoles.bind(this);
+    this.fetchAccountInfo = this.fetchAccountInfo.bind(this);
+    this.handleSaveAccount = this.handleSaveAccount.bind(this);
   }
 
   componentDidMount() {
@@ -104,7 +106,26 @@ class NewRoleAccountDialog extends React.Component {
     }
   }
 
+  async fetchAccountInfo(name) {
+    let resp = await api.GetServiceAccount(name);
+    if (resp) {
+      if (resp.data) {
+        let scope = resp.data.scope.split(",");
+
+        this.setState({
+          account: resp.data.name,
+          email: resp.data.email,
+          domain: resp.data.domain,
+          provider: resp.data.provider,
+          active: resp.data.active,
+          selectedRole: scope
+        });
+      }
+    }
+  }
+
   handleClickOpen = () => {
+    this.fetchAccountInfo(this.props.account);
     this.setState({
       open: true
     });
@@ -126,12 +147,12 @@ class NewRoleAccountDialog extends React.Component {
     });
   };
 
-  async handleCreateAccount(data) {
-    let resp = await api.CreateServiceAccount(data.name, data);
+  async handleSaveAccount(name, data) {
+    let resp = await api.SaveServiceAccount(name, data);
 
     if (resp) {
       if (resp.data.success) {
-        alert("Create new account [" + data.name + "]");
+        alert("Saved.");
         this.handleClose();
         this.props.refresh();
       } else {
@@ -146,9 +167,13 @@ class NewRoleAccountDialog extends React.Component {
     const { classes } = this.props;
     return (
       <div>
-        <IconButton aria-label="New" onClick={this.handleClickOpen}>
-          <PlayListAddIcon />
-        </IconButton>
+        <Button
+          color="primary"
+          className={classes.button}
+          onClick={this.handleClickOpen}
+        >
+          Edit
+        </Button>
 
         <Dialog
           onClose={this.handleClose}
@@ -174,7 +199,7 @@ class NewRoleAccountDialog extends React.Component {
                     ? "all"
                     : this.state.selectedRole.join(",")
               };
-              this.handleCreateAccount(data);
+              this.handleSaveAccount(this.props.account, data);
             }}
           >
             <DialogContent>
@@ -300,7 +325,7 @@ class NewRoleAccountDialog extends React.Component {
                 className={classes.fullWidth}
               >
                 <Button color="secondary" size="large" type="submit">
-                  Submit
+                  Save
                 </Button>
               </FormControl>
             </DialogContent>
@@ -311,8 +336,8 @@ class NewRoleAccountDialog extends React.Component {
   }
 }
 
-NewRoleAccountDialog.propTypes = {
+EditRoleAccountDialog.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(withMobileDialog()(NewRoleAccountDialog));
+export default withStyles(styles)(withMobileDialog()(EditRoleAccountDialog));
