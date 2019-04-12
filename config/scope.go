@@ -1,6 +1,9 @@
 package config
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 // Scope service access scope path
 var Scope = ScopeDefinition{
@@ -32,7 +35,9 @@ type ScopePath []string
 
 func (paths *ScopePath) Match(path string) bool {
 	for _, p := range *paths {
-		if p == path {
+		var replacer = regexp.MustCompile(`:[\w]*`)
+		p = replacer.ReplaceAllString(p, `.*`)
+		if match, _ := regexp.MatchString(p, path); match {
 			return true
 		}
 	}

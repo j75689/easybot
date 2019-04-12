@@ -404,9 +404,15 @@ class RolebindTable extends React.Component {
                       <TableCell component="th" scope="row" padding="none">
                         {n.account}
                       </TableCell>
-                      <TableCell align="left">{n.scope}</TableCell>
-                      <TableCell align="left">{n.generate}</TableCell>
-                      <TableCell align="left">{n.expire}</TableCell>
+                      <TableCell style={{ maxWidth: "30px" }} align="left">
+                        {n.scope}
+                      </TableCell>
+                      <TableCell style={{ maxWidth: "30px" }} align="left">
+                        {n.generate}
+                      </TableCell>
+                      <TableCell style={{ maxWidth: "30px" }} align="left">
+                        {n.expire}
+                      </TableCell>
                       <TableCell style={{ maxWidth: "50px" }} align="left">
                         <div
                           onClick={e => {
