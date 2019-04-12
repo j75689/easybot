@@ -72,16 +72,22 @@ func registerDashBoardRouter(app *gin.Engine) {
 	// page router
 	dashboard.GET("/", context.HandleIndexPage(context_path))
 	dashboard.GET("/dashboard", context.HandleIndexPage(context_path))
+	dashboard.GET("/config", context.HandleIndexPage(context_path))
 	dashboard.GET("/accessrole", context.HandleIndexPage(context_path))
 	// login
 	dashboard.GET("/login", context.HandleIndexPage(context_path))
 	dashboard.POST("/login", context.HandleLogin(admin_user, admin_pass))
-	// runner
-	dashboard.POST("/runner", context.HandleTestRunner())
 	// plugin
 	dashboard.POST("/plugin/:plugin", context.HandleTestPlugin())
+	// config
+	dashboard.GET("/handler/config", context.HandleGetAllConfigID(&db))
+	dashboard.GET("/handler/config/:id", context.HandleGetConfig(&db))
+	dashboard.POST("/handler/config/:id", context.HandlePostConfig(&db))
+	dashboard.DELETE("/handler/config/:id", context.HandleDeleteConfig(&db))
+	// runner
+	dashboard.POST("/handler/runner", context.HandleTestRunner())
 	// accessrole
-	dashboard.GET("role/scope", context.HandleGetScopeTags())
+	dashboard.GET("/role/scope", context.HandleGetScopeTags())
 	dashboard.GET("/role/account", context.HandleGetAllServiceAccount(&db))
 	dashboard.DELETE("/role/account", context.HandleBatchDeleteServiceAccount(&db))
 	dashboard.GET("/role/account/:name", context.HandleGetServiceAccount(&db))

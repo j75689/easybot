@@ -16,6 +16,24 @@ import (
 	"github.com/j75689/easybot/config"
 )
 
+// HandleGetAllConfigID process get all config id
+func HandleGetAllConfigID(db *store.Storage) func(*gin.Context) {
+	return func(c *gin.Context) {
+		var configIDs = make(map[string][]string)
+		if err := (*db).LoadAll(config.MessageHandlerConfigTable, func(key string, value interface{}) {
+			var messageConfig config.MessageHandlerConfig
+			b, _ := json.Marshal(value)
+			if err := json.Unmarshal(b, &messageConfig); err == nil {
+				configIDs[messageConfig.EventType] = append(configIDs[messageConfig.EventType], messageConfig.ID)
+			}
+
+		}); err != nil {
+			c.JSON(200, gin.H{"success": false, "error": err.Error()})
+		}
+		c.JSON(200, configIDs)
+	}
+}
+
 // HandleGetConfig process get config file
 func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
@@ -26,7 +44,7 @@ func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 			json.Unmarshal(b, &messageConfig)
 			c.JSON(200, messageConfig)
 		} else {
-			c.JSON(200, gin.H{"error": err.Error()})
+			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 		}
 	}
 }
@@ -42,14 +60,14 @@ func HandlePostConfig(db *store.Storage) func(*gin.Context) {
 				} else {
 					logger.Infof("[dashboard] Register config [%s]", messageConfig.ID)
 					messagehandler.RegisterConfig(&messageConfig)
-					c.JSON(200, gin.H{"message": "success."})
+					c.JSON(200, gin.H{"success": true})
 				}
 			} else {
-				c.JSON(200, gin.H{"error": "invalid config."})
+				c.JSON(200, gin.H{"success": false, "error": "invalid config."})
 			}
 
 		} else {
-			c.JSON(200, gin.H{"error": err.Error()})
+			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 		}
 	}
 }
@@ -74,14 +92,14 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 			}
 
 		} else {
-			c.JSON(200, gin.H{"error": err.Error()})
+			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 			return
 		}
 		if err := (*db).Delete("config", configID); err != nil {
 			logger.Errorf("[dashboard] Delete config [%s] error: %s", configID, err.Error())
-			c.JSON(200, gin.H{"error": err.Error()})
+			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 		} else {
-			c.JSON(200, gin.H{"message": "success."})
+			c.JSON(200, gin.H{"success": true})
 		}
 	}
 }

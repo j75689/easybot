@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import Dashboard from "./pages/dashboard";
 import SignIn from "./pages/sign-in";
 import AccessRole from "./pages/access-role";
+import MessageHandlerConfig from "./pages/config";
 import * as serviceWorker from "./serviceWorker";
 import {
   BrowserRouter,
@@ -18,6 +19,7 @@ class App extends Component {
       <>
         <Switch>
           <Route exact path="/dashboard" component={Dashboard} />
+          <Route exact path="/config" component={MessageHandlerConfig} />
           <Route exact path="/accessrole" component={AccessRole} />
           <Route exact path="/login" component={SignIn} />
         </Switch>
