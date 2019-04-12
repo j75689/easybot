@@ -206,7 +206,7 @@ func HandleRefreshServiceAccountToken(db *store.Storage) func(*gin.Context) {
 
 		if data, err := json.Marshal(value); err == nil {
 			json.Unmarshal(data, &account)
-			tokenInfo, err = auth.RefreshToken(account.Token)
+			tokenInfo, err = auth.GenerateToken(&account)
 			if err != nil {
 				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 				return
