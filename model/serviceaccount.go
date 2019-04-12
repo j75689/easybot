@@ -1,8 +1,8 @@
 package model
 
 import (
-	"github.com/j75689/easybot/server/auth/claim"
-	"github.com/j75689/easybot/server/auth/token"
+	"github.com/j75689/easybot/auth/claim"
+	"github.com/j75689/easybot/auth/token"
 )
 
 // ServiceAccount api access token account

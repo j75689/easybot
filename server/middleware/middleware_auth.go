@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/j75689/easybot/server/auth"
+	"github.com/j75689/easybot/auth"
 )
 
 // UserAuthMiddleware handle auth

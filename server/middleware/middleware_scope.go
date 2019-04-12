@@ -5,12 +5,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/j75689/easybot/auth/claim"
+	"github.com/j75689/easybot/auth/token"
 	"github.com/j75689/easybot/config"
 	"github.com/j75689/easybot/model"
 	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/store"
-	"github.com/j75689/easybot/server/auth/claim"
-	"github.com/j75689/easybot/server/auth/token"
 )
 
 // ScopeMiddleware handle valid api scope

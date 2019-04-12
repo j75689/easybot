@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/j75689/easybot/server/auth"
+	"github.com/j75689/easybot/auth"
 
 	"github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/plugin"

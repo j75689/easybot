@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/j75689/easybot/auth/claim"
 	"github.com/j75689/easybot/model"
-	"github.com/j75689/easybot/server/auth/claim"
 )
 
 func TestGenerateToken(t *testing.T) {
