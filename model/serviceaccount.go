@@ -12,7 +12,7 @@ type ServiceAccount struct {
 	Domain   string `json:"domain" bson:"domain"`
 	Provider string `json:"provider" bson:"provider"`
 	Scope    string `json:"scope" bson:"scope"`
-	Active   int    `json:"active" bson:"active"`
+	Active   int64  `json:"active" bson:"active"`
 
 	Generate int64  `json:"generate" bson:"generate"`
 	Expired  int64  `json:"expired" bson:"expired"`
@@ -57,7 +57,7 @@ func (account *ServiceAccount) ValidScope(scope string) bool {
 }
 
 // ValidActive field
-func (account *ServiceAccount) ValidActive(active int) bool {
+func (account *ServiceAccount) ValidActive(active int64) bool {
 	return account.Active == active
 }
 

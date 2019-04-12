@@ -10,5 +10,5 @@ type ServiceAccountClaims struct {
 	Domain   string
 	Provider string
 	Scope    string
-	Active   int
+	Active   int64
 }

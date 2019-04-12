@@ -85,6 +85,7 @@ class EditRoleAccountDialog extends React.Component {
     this.fetchRoles = this.fetchRoles.bind(this);
     this.fetchAccountInfo = this.fetchAccountInfo.bind(this);
     this.handleSaveAccount = this.handleSaveAccount.bind(this);
+    this.handleRefreshToken = this.handleRefreshToken.bind(this);
   }
 
   componentDidMount() {
@@ -147,6 +148,22 @@ class EditRoleAccountDialog extends React.Component {
     });
   };
 
+  async handleRefreshToken(name) {
+    let resp = await api.RefreshServiceAccountToken(name);
+    if (resp) {
+      if (resp.data) {
+        if (resp.data.success) {
+          alert("Refresh.");
+          this.props.refresh();
+        } else {
+          alert(resp.data.error);
+        }
+      }
+    } else {
+      alert("Error!");
+    }
+  }
+
   async handleSaveAccount(name, data) {
     let resp = await api.SaveServiceAccount(name, data);
 
@@ -174,7 +191,15 @@ class EditRoleAccountDialog extends React.Component {
         >
           Edit
         </Button>
-
+        <Button
+          color="secondary"
+          className={classes.button}
+          onClick={e => {
+            this.handleRefreshToken(this.props.account);
+          }}
+        >
+          Refresh
+        </Button>
         <Dialog
           onClose={this.handleClose}
           aria-labelledby="responsive-dialog-title"

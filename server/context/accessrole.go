@@ -88,7 +88,7 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 			EMail:    email,
 			Domain:   domain,
 			Provider: provider,
-			Active:   active,
+			Active:   int64(active),
 			Scope:    scope,
 		}
 		token, err := auth.GenerateToken(account)
@@ -137,7 +137,7 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 			account.EMail = email
 			account.Domain = domain
 			account.Provider = provider
-			account.Active = active
+			account.Active = int64(active)
 			account.Scope = scope
 
 			token, err := auth.GenerateToken(&account)
@@ -202,31 +202,31 @@ func HandleRefreshServiceAccountToken(db *store.Storage) func(*gin.Context) {
 			tokenInfo *token.TokenInfo
 			account   model.ServiceAccount
 		)
-		tokenObj, tokenOk := c.Get("token")
+		value, _ := (*db).Load(config.ServiceAccountTable, name)
 
-		if tokenOk {
-			tokenInfo = tokenObj.(*token.TokenInfo)
-			value, _ := (*db).Load(config.ServiceAccountTable, name)
-
-			if data, err := json.Marshal(value); err == nil {
-				json.Unmarshal(data, &account)
-				tokenInfo, err = auth.RefreshToken(tokenInfo.AccessToken)
-				if err != nil {
-					c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
-					account.Token = tokenInfo.AccessToken
-					account.Expired = tokenInfo.Expire
-					// Save
-					if err := (*db).Save(config.ServiceAccountTable, name, account); err != nil {
-						c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
-						return
-					}
-					c.JSON(http.StatusOK, gin.H{
-						"success": true,
-						"token":   tokenInfo,
-					})
-				}
+		if data, err := json.Marshal(value); err == nil {
+			json.Unmarshal(data, &account)
+			tokenInfo, err = auth.RefreshToken(account.Token)
+			if err != nil {
+				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
+				return
 			}
+			logger.Info(tokenInfo)
+			// Save
+			account.Token = tokenInfo.AccessToken
+			account.Expired = tokenInfo.Expire
+			if err := (*db).Save(config.ServiceAccountTable, name, account); err != nil {
+				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"token":   tokenInfo,
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"success": false, "error": "Account not found"})
 		}
+
 	}
 }
 

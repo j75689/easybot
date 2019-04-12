@@ -24,7 +24,6 @@ type options struct {
 	signingMethod jwt.SigningMethod
 	signingKey    interface{}
 	keyfunc       jwt.Keyfunc
-	expired       time.Duration
 	tokenType     string
 }
 
@@ -124,8 +123,8 @@ func RefreshToken(tokenString string) (*token.TokenInfo, error) {
 		var expiresAt int64
 		if claims.Active > 0 {
 			now := time.Now()
-			expiresAt = now.Add(Options.expired).Unix()
-			claims.ExpiresAt = time.Now().Add(Options.expired).Unix()
+			expiresAt = now.Add(time.Duration(claims.Active) * time.Second).Unix()
+			claims.ExpiresAt = expiresAt
 		}
 
 		jwttoken := jwt.NewWithClaims(Options.signingMethod, claims)
