@@ -149,6 +149,62 @@ const api = {
     } catch (err) {
       console.log(err);
     }
+  },
+  async GetHandlerConfig(configID) {
+    try {
+      let res = await service.get(`/handler/config/${configID}`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async CreateHandlerConfig(configID, data) {
+    try {
+      let res = await service.post(`/handler/config/${configID}`, data);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async SaveHandlerConfig(configID, data) {
+    try {
+      let res = await service.put(`/handler/config/${configID}`, data);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async DeleteHandlerConfig(configID) {
+    try {
+      let res = await service.delete(`/handler/config/${configID}`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 };
 

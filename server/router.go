@@ -82,7 +82,8 @@ func registerDashBoardRouter(app *gin.Engine) {
 	// config
 	dashboard.GET("/handler/config", context.HandleGetAllConfigID(&db))
 	dashboard.GET("/handler/config/:id", context.HandleGetConfig(&db))
-	dashboard.POST("/handler/config/:id", context.HandlePostConfig(&db))
+	dashboard.POST("/handler/config/:id", context.HandleCreateConfig(&db))
+	dashboard.PUT("/handler/config/:id", context.HandleSaveConfig(&db))
 	dashboard.DELETE("/handler/config/:id", context.HandleDeleteConfig(&db))
 	// runner
 	dashboard.POST("/handler/runner", context.HandleTestRunner())
@@ -106,7 +107,8 @@ func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, bot
 
 	// crud config
 	v1.GET("/config/:id", context.HandleGetConfig(&db))
-	v1.POST("/config/:id", context.HandlePostConfig(&db))
+	v1.POST("/config/:id", context.HandleCreateConfig(&db))
+	v1.PUT("/config/:id", context.HandleSaveConfig(&db))
 	v1.DELETE("/config/:id", context.HandleDeleteConfig(&db))
 
 	// plugin

@@ -3,6 +3,7 @@ package context
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/fatih/structs"
 	messagehandler "github.com/j75689/easybot/handler"
@@ -49,12 +50,22 @@ func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 	}
 }
 
-// HandlePostConfig process post config file
-func HandlePostConfig(db *store.Storage) func(*gin.Context) {
+// HandleCreateConfig process create config file
+func HandleCreateConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
+		var configID = c.Param("id")
+		if _, err := (*db).Load(config.MessageHandlerConfigTable, configID); err == nil {
+			c.JSON(http.StatusOK, gin.H{"success": false, "error": configID + " already exist"})
+			return
+		}
+
 		if configData, err := c.GetRawData(); err == nil {
 			var messageConfig config.MessageHandlerConfig
 			if err = json.Unmarshal(configData, &messageConfig); err == nil {
+				if configID != messageConfig.ID {
+					c.JSON(http.StatusOK, gin.H{"success": false, "error": "ConfigID not match"})
+					return
+				}
 				if err = (*db).Save(config.MessageHandlerConfigTable, messageConfig.ID, messageConfig); err != nil {
 					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ID, err.Error())
 				} else {
@@ -63,7 +74,35 @@ func HandlePostConfig(db *store.Storage) func(*gin.Context) {
 					c.JSON(200, gin.H{"success": true})
 				}
 			} else {
-				c.JSON(200, gin.H{"success": false, "error": "invalid config."})
+				c.JSON(200, gin.H{"success": false, "error": "Invalid config"})
+			}
+
+		} else {
+			c.JSON(200, gin.H{"success": false, "error": err.Error()})
+		}
+	}
+}
+
+// HandleSaveConfig process save config file
+func HandleSaveConfig(db *store.Storage) func(*gin.Context) {
+	return func(c *gin.Context) {
+		var configID = c.Param("id")
+		if configData, err := c.GetRawData(); err == nil {
+			var messageConfig config.MessageHandlerConfig
+			if err = json.Unmarshal(configData, &messageConfig); err == nil {
+				if configID != messageConfig.ID {
+					c.JSON(http.StatusOK, gin.H{"success": false, "error": "ConfigID not match"})
+					return
+				}
+				if err = (*db).Save(config.MessageHandlerConfigTable, messageConfig.ID, messageConfig); err != nil {
+					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ID, err.Error())
+				} else {
+					logger.Infof("[dashboard] Register config [%s]", messageConfig.ID)
+					messagehandler.RegisterConfig(&messageConfig)
+					c.JSON(200, gin.H{"success": true})
+				}
+			} else {
+				c.JSON(200, gin.H{"success": false, "error": "Invalid config"})
 			}
 
 		} else {
