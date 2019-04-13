@@ -73,6 +73,8 @@ class ConfigEditor extends React.Component {
           configs: resp.data
         });
       }
+    } else {
+      alert("Error!");
     }
   }
 
