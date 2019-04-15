@@ -33,6 +33,16 @@ func (db *MongoDB) Save(collection string, key string, data interface{}) (err er
 	return
 }
 
+func (db *MongoDB) LoadWithFilter(collection string, filter map[string]interface{}) (data interface{}, err error) {
+	coll := db.instance.Database(db.info.DBName).Collection(collection)
+
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	var d map[string]interface{}
+	err = coll.FindOne(ctx, bson.M{"data": filter}).Decode(&d)
+
+	return d["data"], err
+}
+
 func (db *MongoDB) LoadAll(collection string, callback func(key string, value interface{})) (err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)

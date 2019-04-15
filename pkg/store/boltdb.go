@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -30,6 +31,34 @@ func (db *BoltDB) Save(collection string, key string, data interface{}) (err err
 		}
 
 		return nil
+	})
+	return
+}
+
+func (db *BoltDB) LoadWithFilter(collection string, filter map[string]interface{}) (data interface{}, err error) {
+	err = db.instance.Batch(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(collection))
+		if err != nil {
+			return err
+		}
+		c := b.Cursor()
+		for _, v := c.Seek(nil); v != nil; _, v = c.Next() {
+			for filterKey, filterValue := range filter {
+				filterString := fmt.Sprintf(`"$v":"$v"`, filterKey, filterValue)
+				if bytes.Index(v, []byte(filterString)) > -1 {
+					var (
+						data interface{}
+					)
+					if err = json.Unmarshal(v, &data); err == nil {
+						break
+					}
+				}
+			}
+		}
+		if data == nil {
+			err = fmt.Errorf("data notfound [%v]", filter)
+		}
+		return err
 	})
 	return
 }
