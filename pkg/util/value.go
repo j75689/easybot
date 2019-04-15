@@ -1,14 +1,40 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html"
+	"html/template"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
+	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/lineemoji"
 )
+
+// ExcuteGoTemplate parse and excute template
+func ExcuteGoTemplate(reply string, variables map[string]interface{}) string {
+	tmpl := template.New("temp")
+	tmpl.Parse(reply)
+	var (
+		data       bytes.Buffer
+		dataString string
+	)
+	err := tmpl.Execute(&data, variables)
+	if err != nil {
+		logger.Error("[pkg] ", "Excute Template Error: ", err)
+	}
+	dataString, err = strconv.Unquote(data.String())
+	if err != nil {
+		logger.Error("[pkg] ", "Strings Unquote Error: ", err)
+		dataString = data.String()
+	}
+	dataString = html.UnescapeString(dataString)
+	return dataString
+}
 
 // ReplaceVariables from string
 func ReplaceVariables(reply string, variables map[string]interface{}) string {

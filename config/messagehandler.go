@@ -2,12 +2,12 @@ package config
 
 // MessageHandlerConfig 處理傳入訊息的設定
 type MessageHandlerConfig struct {
-	ID            string            `json:"id"`
-	EventType     string            `json:"eventType"`
-	MessageType   string            `json:"messagetype,omitempty"`
-	DefaultValues map[string]string `json:"defaultValues"`
-	Match         interface{}       `json:"match,omitempty"`
-	Stage         []*StageConfig    `json:"stage"`
+	ID            string                 `json:"id"`
+	EventType     string                 `json:"eventType"`
+	MessageType   string                 `json:"messagetype,omitempty"`
+	DefaultValues map[string]interface{} `json:"defaultValues"`
+	Match         interface{}            `json:"match,omitempty"`
+	Stage         []*StageConfig         `json:"stage"`
 }
 
 // StageConfig 處理的執行步驟

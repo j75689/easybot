@@ -74,6 +74,7 @@ func HandleCreateConfig(db *store.Storage) func(*gin.Context) {
 					c.JSON(200, gin.H{"success": true})
 				}
 			} else {
+				logger.Error("[dashboard] ", err)
 				c.JSON(200, gin.H{"success": false, "error": "Invalid config"})
 			}
 

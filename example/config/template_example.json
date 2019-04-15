@@ -1,0 +1,21 @@
+{
+  "id": "TemplateExample",
+  "eventType": "message",
+  "messagetype": "text",
+  "defaultValues": {
+    "dockerHub": "https://hub.docker.com/r/j75689/easybot",
+    "info": [
+      "Hello,Hello! I'm EasyBot.",
+      "GitHub Link ${repo}",
+      "DockerHub Link ${dockerHub}"
+    ],
+    "repo": "https://github.com/j75689/easybot"
+  },
+  "match": ["Template", "template"],
+  "stage": [
+    {
+      "type": "reply",
+      "value": "{\"type\":\"flex\",\"altText\":\"Infomation\",\"contents\":{\"type\":\"carousel\",\"contents\":[{{range $index,$element:=.info}}{{if gt $index 0}},{{end}}{\"type\":\"bubble\",\"direction\":\"ltr\",\"body\":{\"type\":\"box\",\"layout\":\"vertical\",\"contents\":[{\"type\":\"text\",\"text\":\"Body\",\"align\":\"center\"}]}},{\"type\":\"bubble\",\"direction\":\"ltr\",\"body\":{\"type\":\"box\",\"layout\":\"vertical\",\"contents\":[{\"type\":\"text\",\"text\":\"Body\",\"align\":\"center\"}]}}{{end}}]}}"
+    }
+  ]
+}

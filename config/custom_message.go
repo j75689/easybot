@@ -1,6 +1,8 @@
 package config
 
-import "github.com/line/line-bot-sdk-go/linebot"
+import (
+	"github.com/line/line-bot-sdk-go/linebot"
+)
 
 // CustomMessage 自定義Json Reply Message
 type CustomMessage struct {
