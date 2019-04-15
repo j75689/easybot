@@ -26,18 +26,18 @@ func UserIptableMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.Hand
 		if scope, ok := config.Scope.GetScope(c.Request.URL.Path); ok {
 			value, err := (*db).LoadWithFilter(config.IpTable, map[string]interface{}{"scope": scope})
 			if err != nil {
-				logger.Error("[iptable] ", err)
+				logger.Warn("[iptable] ", err)
 				return
 			}
 			var iptable model.Iptables
 			data, err := json.Marshal(value)
 			if err != nil {
-				logger.Error("[iptable] ", err)
+				logger.Warn("[iptable] ", err)
 				return
 			}
 			err = json.Unmarshal(data, &iptable)
 			if err != nil {
-				logger.Error("[iptable] ", err)
+				logger.Warn("[iptable] ", err)
 				return
 			}
 
