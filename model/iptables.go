@@ -18,6 +18,15 @@ type Iptables struct {
 
 // Pass check clientIP
 func (iptable *Iptables) Pass(clientIP string) bool {
+
+	var preset bool
+	switch iptable.Type {
+	case "allow":
+		preset = true
+	case "deny":
+		preset = false
+	}
+
 	for _, ip := range iptable.IP {
 		_, ipfilter, err := net.ParseCIDR(ip)
 		if err != nil {
@@ -30,16 +39,11 @@ func (iptable *Iptables) Pass(clientIP string) bool {
 		_, client, err := net.ParseCIDR(fmt.Sprintf("%s/%s", clientIP, mask))
 		if err != nil {
 			logger.Error("[iptables] ", err)
-			return false
+			return preset
 		}
 		if reflect.DeepEqual(client, ipfilter) {
-			switch iptable.Type {
-			case "allow":
-				return true
-			case "deny":
-				return false
-			}
+			return preset
 		}
 	}
-	return false
+	return !preset
 }
