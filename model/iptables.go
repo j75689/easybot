@@ -33,7 +33,12 @@ func (iptable *Iptables) Pass(clientIP string) bool {
 			return false
 		}
 		if reflect.DeepEqual(client, ipfilter) {
-			return true
+			switch iptable.Type {
+			case "allow":
+				return true
+			case "deny":
+				return false
+			}
 		}
 	}
 	return false
