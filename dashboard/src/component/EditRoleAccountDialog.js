@@ -212,7 +212,7 @@ class EditRoleAccountDialog extends React.Component {
           open={this.state.open}
         >
           <DialogTitle id="responsive-dialog-title" onClose={this.handleClose}>
-            Create
+            Edit
           </DialogTitle>
           <form
             className={classes.container}

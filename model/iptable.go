@@ -9,9 +9,9 @@ import (
 	"github.com/j75689/easybot/pkg/logger"
 )
 
-// Iptables accessible ips
+// Iptable accessible ips
 type Iptable struct {
-	ID    string   `json:"-" bson:"_id"`
+	ID    string   `json:"id" bson:"_id"`
 	Type  string   `json:"type" bson:"type"` // allow, deny
 	IP    []string `json:"ip" bson:"ip"`
 	Scope string   `json:"scope" bson:"scope"`

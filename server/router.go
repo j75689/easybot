@@ -95,6 +95,13 @@ func registerDashBoardRouter(app *gin.Engine) {
 	dashboard.PUT("/role/account/:name", context.HandleSaveServiceAccount(&db))
 	dashboard.POST("/role/account/:name", context.HandleCreateServiceAccount(&db))
 	dashboard.POST("/role/account/:name/refresh", context.HandleRefreshServiceAccountToken(&db))
+	// iptable
+	dashboard.GET("/role/iptable", context.HandleGetIptables(&db))
+	dashboard.POST("/role/iptable", context.HandleCreateIptable(&db))
+	dashboard.GET("/role/iptable/:id", context.HandleGetIptable(&db))
+	dashboard.PUT("/role/iptable/:id", context.HandleSaveIptable(&db))
+	dashboard.DELETE("/role/iptable/:id", context.HandleDeleteIptable(&db))
+
 }
 
 func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, botClient *linebot.Client) {
@@ -102,8 +109,8 @@ func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, bot
 	// middleware
 	skipper := middleware.AllowPathPrefixSkipper(
 		middleware.Prefix{Method: "Any", Path: "/api/v1/bot/hook"})
-	v1.Use(middleware.UserAuthMiddleware(skipper))
 	v1.Use(middleware.UserIptableMiddleware(&db, skipper))
+	v1.Use(middleware.UserAuthMiddleware(skipper))
 	v1.Use(middleware.UserScopeMiddleware(&db, skipper))
 
 	// crud config

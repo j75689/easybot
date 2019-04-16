@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/j75689/easybot/auth/claim"
 	"github.com/j75689/easybot/config"
 	"github.com/j75689/easybot/model"
 	"github.com/j75689/easybot/pkg/logger"
@@ -24,13 +23,11 @@ func UserIptableMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.Hand
 			}
 		}
 		var (
-			claims *claim.ServiceAccountClaims
-			pass   = true
+			pass = true
 		)
-		claimsObj, claimsOk := c.Get("claim")
-		if claimsOk {
-			claims = claimsObj.(*claim.ServiceAccountClaims)
-			err := (*db).LoadAllWithFilter(config.IpTable, map[string]interface{}{"scope": claims.Scope},
+		// Check By Scope
+		if scope, ok := config.Scope.FindScopeByPath(c.Request.URL.Path); ok {
+			err := (*db).LoadAllWithFilter(config.IpTable, map[string]interface{}{"scope": scope},
 				func(id string, value interface{}) {
 					var iptable model.Iptable
 					data, err := json.Marshal(value)
@@ -48,12 +45,35 @@ func UserIptableMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.Hand
 				})
 			if err != nil {
 				logger.Warn("[iptable] ", err)
-				return
 			}
-			if !pass {
-				c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("The IP Address %s is not allowed", c.ClientIP())})
-				c.Abort()
+		}
+
+		// Check All
+		{
+			err := (*db).LoadAllWithFilter(config.IpTable, map[string]interface{}{"scope": "all"},
+				func(id string, value interface{}) {
+					var iptable model.Iptable
+					data, err := json.Marshal(value)
+					if err != nil {
+						logger.Warnf("[iptable] id:%v err:%v", id, err)
+						return
+					}
+					err = json.Unmarshal(data, &iptable)
+					if err != nil {
+						logger.Warnf("[iptable] id:%v err:%v", id, err)
+						return
+					}
+
+					pass = pass && iptable.Pass(c.ClientIP())
+				})
+			if err != nil {
+				logger.Warn("[iptable] ", err)
 			}
+		}
+
+		if !pass {
+			c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("The IP Address %s is not allowed", c.ClientIP())})
+			c.Abort()
 		}
 	}
 }

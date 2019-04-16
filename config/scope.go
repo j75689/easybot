@@ -88,8 +88,8 @@ func (scope *ScopeDefinition) Allow(scopeString, path string) bool {
 	return false
 }
 
-// GetScope get scopeTag by path
-func (scope *ScopeDefinition) GetScope(path string) (ScopeTag, bool) {
+// FindScopeByPath get scopeTag by path
+func (scope *ScopeDefinition) FindScopeByPath(path string) (ScopeTag, bool) {
 	for tag, paths := range *scope {
 		if paths.Match(path) {
 			return tag, true

@@ -205,6 +205,76 @@ const api = {
     } catch (err) {
       console.log(err);
     }
+  },
+  async GetIptables() {
+    try {
+      let res = await service.get(`/role/iptable`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async GetIptable(id) {
+    try {
+      let res = await service.get(`/role/iptable/${id}`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async CreateIptable(data) {
+    try {
+      let res = await service.post(`/role/iptable`, data);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async SaveIptable(id, data) {
+    try {
+      let res = await service.put(`/role/iptable/${id}`, data);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async DeleteIptable(id) {
+    try {
+      let res = await service.delete(`/role/iptable/${id}`);
+      return new Promise(resolve => {
+        if (res.code === 0) {
+          resolve(res);
+        } else {
+          resolve(res);
+        }
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 };
 

@@ -15,6 +15,9 @@ import PlayListAddIcon from "@material-ui/icons/PlaylistAdd";
 import Chip from "@material-ui/core/Chip";
 import Avatar from "@material-ui/core/Avatar";
 import FaceIcon from "@material-ui/icons/Face";
+import api from "../lib/api";
+import NewIptableDialog from "./NewIptableDialog";
+import EditIptableDialog from "./EditIptableDialog";
 
 import { AutoSizer, Column, SortDirection, Table } from "react-virtualized";
 
@@ -61,7 +64,12 @@ class IpTableToolbar extends React.Component {
         <div className={classes.spacer} />
         <div className={classes.actions}>
           <Tooltip title="Add">
-            <IconButton aria-label="Add" onClick={event => {}}>
+            <IconButton
+              aria-label="Add"
+              onClick={event => {
+                this.props.open();
+              }}
+            >
               <PlayListAddIcon />
             </IconButton>
           </Tooltip>
@@ -255,86 +263,132 @@ MuiVirtualizedTable.defaultProps = {
 
 const WrappedVirtualizedTable = withStyles(styles)(MuiVirtualizedTable);
 
-const data = [
-  [
-    <Chip label={"10.0.0.0/24"} />,
-    "allow",
-    "all",
-    <IconButton aria-label="Delete">
-      <DeleteIcon fontSize="small" />
-    </IconButton>
-  ],
-  [
-    <Chip label={"10.0.0.0/8"} />,
-    "deny",
-    "push",
-    <IconButton aria-label="Delete">
-      <DeleteIcon fontSize="small" />
-    </IconButton>
-  ],
-  [
-    <Chip label={"10.0.0.0/16"} />,
-    "allow",
-    "config",
-    <IconButton aria-label="Delete">
-      <DeleteIcon fontSize="small" />
-    </IconButton>
-  ]
-];
-
-let id = 0;
-function createData(ips, type, scope, option) {
-  id += 1;
+function createData(id, ips, type, scope, option) {
   return { id, ips, type, scope, option };
 }
 
-const rows = [];
+class IpTable extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      rows: []
+    };
+    this.fetchIptables = this.fetchIptables.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
+  }
 
-for (let i = 0; i < 200; i += 1) {
-  const randomSelection = data[Math.floor(Math.random() * data.length)];
-  rows.push(createData(...randomSelection));
-}
+  async fetchIptables() {
+    let resp = await api.GetIptables();
+    if (resp) {
+      if (resp.data) {
+        let rows = [];
+        resp.data.map(item => {
+          let ips = [];
+          item.ip.map(range => {
+            if (ips.length > 0) ips.push(<>&nbsp;</>);
+            ips.push(<Chip label={range} />);
+          });
+          let option = (
+            <IconButton aria-label="Delete">
+              <DeleteIcon
+                fontSize="small"
+                onClick={e => {
+                  if (window.confirm("Sure?")) {
+                    this.handleDelete(item.id);
+                  }
+                  e.preventDefault();
+                }}
+              />
+            </IconButton>
+          );
+          rows.push(createData(item.id, ips, item.type, item.scope, option));
+        });
+        this.setState({ rows: rows });
+      }
+    }
+  }
 
-function IpTable() {
-  return (
-    <>
-      <Paper style={{ height: 400, width: "100%" }}>
-        <IpTableToolbar />
-        <WrappedVirtualizedTable
-          rowCount={rows.length}
-          rowGetter={({ index }) => rows[index]}
-          onRowClick={event => console.log(event)}
-          columns={[
-            {
-              width: 200,
-              flexGrow: 1.0,
-              label: "IP",
-              dataKey: "ips",
-              numeric: false
-            },
-            {
-              width: 120,
-              label: "type",
-              dataKey: "type",
-              numeric: false
-            },
-            {
-              width: 120,
-              label: "scope",
-              dataKey: "scope",
-              numeric: false
-            },
-            {
-              width: 120,
-              label: "",
-              dataKey: "option",
-              numeric: false
-            }
-          ]}
+  async handleDelete(id) {
+    let resp = await api.DeleteIptable(id);
+    if (resp) {
+      if (resp.data.success) {
+        alert("Deleted.");
+        this.fetchIptables();
+      } else {
+        alert(resp.data.error);
+      }
+    } else {
+      alert("Error!");
+    }
+  }
+
+  componentDidMount() {
+    this.fetchIptables();
+  }
+
+  setCreateDialog = ref => {
+    this.createDialog = ref;
+  };
+
+  setEditDialog = ref => {
+    this.editDialog = ref;
+  };
+
+  render() {
+    return (
+      <>
+        <EditIptableDialog
+          refresh={this.fetchIptables}
+          onRef={this.setEditDialog}
         />
-      </Paper>
-    </>
-  );
+        <NewIptableDialog
+          refresh={this.fetchIptables}
+          onRef={this.setCreateDialog}
+        />
+        <Paper style={{ height: 400, width: "100%" }}>
+          <IpTableToolbar
+            open={() => {
+              this.createDialog.handleClickOpen();
+            }}
+          />
+          <WrappedVirtualizedTable
+            rowCount={this.state.rows.length}
+            rowGetter={({ index }) => this.state.rows[index]}
+            onRowClick={e => {
+              this.editDialog.handleClickOpen(e.rowData.id);
+            }}
+            columns={[
+              {
+                width: 200,
+                flexGrow: 1.0,
+                label: "IP",
+                dataKey: "ips",
+                numeric: false
+              },
+              {
+                width: 120,
+                label: "Type",
+                dataKey: "type",
+                numeric: false
+              },
+              {
+                width: 120,
+                label: "Scope",
+                dataKey: "scope",
+                numeric: false
+              },
+              {
+                width: 120,
+                label: "",
+                dataKey: "option",
+                numeric: false
+              }
+            ]}
+          />
+        </Paper>
+      </>
+    );
+  }
 }
 
 export default IpTable;
