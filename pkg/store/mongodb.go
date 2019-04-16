@@ -23,15 +23,24 @@ type MongoDB struct {
 func (db *MongoDB) SaveWithFilter(collection string, data interface{}, filter map[string]interface{}) (err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	var updated = 0
+
 	update := bson.D{
 		{"$set", data},
 	}
 	v := util.ReflectFieldValue(data, "ID")
 	db.LoadAllWithFilter(collection, filter, func(id string, value interface{}) {
 		v.SetString(id)
-		_, err = coll.UpdateMany(ctx, filter, update)
+		var result *mongo.UpdateResult
+		result, err = coll.UpdateMany(ctx, filter, update)
+
+		updated += int(result.ModifiedCount)
 	})
 
+	// New One
+	if updated == 0 {
+		err = db.Save(collection, data)
+	}
 	return
 }
 
