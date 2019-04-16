@@ -267,6 +267,7 @@ function createData(id, ips, type, scope, option) {
   return { id, ips, type, scope, option };
 }
 
+var triggerEdit = true;
 class IpTable extends React.Component {
   constructor(props) {
     super(props);
@@ -289,16 +290,16 @@ class IpTable extends React.Component {
             ips.push(<Chip label={range} />);
           });
           let option = (
-            <IconButton aria-label="Delete">
-              <DeleteIcon
-                fontSize="small"
-                onClick={e => {
-                  if (window.confirm("Sure?")) {
-                    this.handleDelete(item.id);
-                  }
-                  e.preventDefault();
-                }}
-              />
+            <IconButton
+              aria-label="Delete"
+              onClick={e => {
+                if (window.confirm("Sure?")) {
+                  this.handleDelete(item.id);
+                }
+                triggerEdit = false;
+              }}
+            >
+              <DeleteIcon fontSize="small" />
             </IconButton>
           );
           rows.push(createData(item.id, ips, item.type, item.scope, option));
@@ -355,7 +356,10 @@ class IpTable extends React.Component {
             rowCount={this.state.rows.length}
             rowGetter={({ index }) => this.state.rows[index]}
             onRowClick={e => {
-              this.editDialog.handleClickOpen(e.rowData.id);
+              if (triggerEdit) {
+                this.editDialog.handleClickOpen(e.rowData.id);
+              }
+              triggerEdit = true;
             }}
             columns={[
               {
