@@ -16,6 +16,7 @@ type Connection struct {
 // Storage interface
 type Storage interface {
 	Save(collection, key string, data interface{}) error
+	LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(key string, value interface{})) error
 	LoadWithFilter(collection string, filter map[string]interface{}) (interface{}, error)
 	Load(collection, key string) (interface{}, error)
 	LoadAll(collection string, callback func(key string, value interface{})) error

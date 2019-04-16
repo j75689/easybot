@@ -33,6 +33,33 @@ func (db *MongoDB) Save(collection string, key string, data interface{}) (err er
 	return
 }
 
+func (db *MongoDB) LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(key string, value interface{})) (err error) {
+	coll := db.instance.Database(db.info.DBName).Collection(collection)
+
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	cur, err := coll.Find(ctx, bson.M{"data": filter})
+	if err != nil {
+		return err
+	}
+	defer cur.Close(ctx)
+	for cur.Next(ctx) {
+		var result map[string]interface{}
+		err = cur.Decode(&result)
+		if err != nil {
+			continue
+		}
+		key := result["key"]
+		data := result["data"]
+		if key != nil && data != nil {
+			if id, ok := key.(string); ok {
+				callback(id, data)
+			}
+		}
+	}
+	err = cur.Err()
+	return
+}
+
 func (db *MongoDB) LoadWithFilter(collection string, filter map[string]interface{}) (data interface{}, err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 

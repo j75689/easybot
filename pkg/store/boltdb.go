@@ -35,6 +35,32 @@ func (db *BoltDB) Save(collection string, key string, data interface{}) (err err
 	return
 }
 
+func (db *BoltDB) LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(key string, value interface{})) (err error) {
+	err = db.instance.Batch(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(collection))
+		if err != nil {
+			return err
+		}
+		c := b.Cursor()
+		for k, v := c.Seek(nil); v != nil; k, v = c.Next() {
+			for filterKey, filterValue := range filter {
+				filterString := fmt.Sprintf(`"$v":"$v"`, filterKey, filterValue)
+				if bytes.Index(v, []byte(filterString)) > -1 {
+					var (
+						data interface{}
+					)
+					if err = json.Unmarshal(v, &data); err == nil {
+						callback(string(k), data)
+					}
+				}
+			}
+		}
+
+		return err
+	})
+	return
+}
+
 func (db *BoltDB) LoadWithFilter(collection string, filter map[string]interface{}) (data interface{}, err error) {
 	err = db.instance.Batch(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(collection))
