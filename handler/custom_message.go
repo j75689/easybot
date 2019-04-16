@@ -4,7 +4,7 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
-// CustomMessage 自定義Json Reply Message
+// CustomMessage Reply Message
 type CustomMessage struct {
 	Msg string
 }
