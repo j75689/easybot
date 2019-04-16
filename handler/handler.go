@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/model"
 	"github.com/j75689/easybot/pkg/util"
 	"github.com/j75689/easybot/plugin"
 
@@ -38,7 +38,7 @@ func init() {
 }
 
 // RegisterConfig to Handler
-func RegisterConfig(cfg *config.MessageHandlerConfig) error {
+func RegisterConfig(cfg *model.MessageHandlerConfig) error {
 	if handler := handlers[linebot.EventType(cfg.EventType)]; handler != nil {
 		return handler.RegisterConfig(cfg)
 	}
@@ -46,16 +46,16 @@ func RegisterConfig(cfg *config.MessageHandlerConfig) error {
 }
 
 // DeregisterConfig from Handler
-func DeregisterConfig(cfg *config.MessageHandlerConfig) error {
+func DeregisterConfig(cfg *model.MessageHandlerConfig) error {
 
 	if handler := handlers[linebot.EventType(cfg.EventType)]; handler != nil {
-		return handler.DeregisterConfig(cfg.ID)
+		return handler.DeregisterConfig(cfg.ConfigID)
 	}
 	return fmt.Errorf("eventType:[%s] handler not found.", cfg.EventType)
 }
 
 // Excute Function
-func Execute(event *linebot.Event) (reply *config.CustomMessage, err error) {
+func Execute(event *linebot.Event) (reply *CustomMessage, err error) {
 	var (
 		variables = make(map[string]interface{})
 	)
@@ -154,7 +154,7 @@ func (ins *WatingGroup) Delete(item *WatingProcess) {
 // WatingProcess status
 type WatingProcess struct {
 	cancel     *context.CancelFunc
-	Config     *config.MessageHandlerConfig
+	Config     *model.MessageHandlerConfig
 	StageIndex int
 	Variables  map[string]interface{}
 }
@@ -167,10 +167,10 @@ func (ins *WatingProcess) Cancel() {
 
 // Handler interface
 type Handler interface {
-	GetConfig(string) *config.MessageHandlerConfig
-	RegisterConfig(*config.MessageHandlerConfig) error
+	GetConfig(string) *model.MessageHandlerConfig
+	RegisterConfig(*model.MessageHandlerConfig) error
 	DeregisterConfig(string) error
-	Run(*linebot.Event, map[string]interface{}) (*config.CustomMessage, error)
+	Run(*linebot.Event, map[string]interface{}) (*CustomMessage, error)
 }
 
 // BaseHandler basic implement
@@ -179,15 +179,15 @@ type BaseHandler struct {
 	Wating  *sync.Map // userID::status
 }
 
-func (h *BaseHandler) GetConfig(id string) (cfg *config.MessageHandlerConfig) {
+func (h *BaseHandler) GetConfig(id string) (cfg *model.MessageHandlerConfig) {
 	if v, ok := h.Configs.Load(id); ok {
-		cfg = v.(*config.MessageHandlerConfig)
+		cfg = v.(*model.MessageHandlerConfig)
 	}
 	return
 }
 
-func (h *BaseHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err error) {
-	h.Configs.Store(cfg.ID, cfg)
+func (h *BaseHandler) RegisterConfig(cfg *model.MessageHandlerConfig) (err error) {
+	h.Configs.Store(cfg.ConfigID, cfg)
 	return
 }
 
@@ -196,7 +196,7 @@ func (h *BaseHandler) DeregisterConfig(id string) (err error) {
 	return
 }
 
-func (h *BaseHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage, err error) {
+func (h *BaseHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *CustomMessage, err error) {
 	// process wating group
 	if v, ok := h.Wating.Load(event.Source.UserID); ok {
 		group := v.(*WatingGroup)
@@ -212,8 +212,8 @@ func (h *BaseHandler) Run(event *linebot.Event, variables map[string]interface{}
 			}
 			if len(process.Config.Stage) > process.StageIndex+1 {
 				var replyStr string
-				replyStr, err = h.runStage(process.Config.ID, process.StageIndex+1, process.Config.Stage, process.Variables)
-				reply = &config.CustomMessage{
+				replyStr, err = h.runStage(process.Config.ConfigID, process.StageIndex+1, process.Config.Stage, process.Variables)
+				reply = &CustomMessage{
 					Msg: replyStr,
 				}
 			}
@@ -225,7 +225,7 @@ func (h *BaseHandler) Run(event *linebot.Event, variables map[string]interface{}
 	return
 }
 
-func (h *BaseHandler) runStage(id string, startIndex int, stageConfig []*config.StageConfig, variables map[string]interface{}) (reply string, err error) {
+func (h *BaseHandler) runStage(id string, startIndex int, stageConfig []*model.StageConfig, variables map[string]interface{}) (reply string, err error) {
 	for idx := startIndex; idx < len(stageConfig); idx++ {
 		stage := stageConfig[idx]
 		switch stage.Type {

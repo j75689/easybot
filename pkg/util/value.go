@@ -2,11 +2,13 @@ package util
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -98,4 +100,30 @@ func getValue(layer []string, data interface{}) interface{} {
 func GetJSONBytes(input interface{}) []byte {
 	param, _ := json.Marshal(input)
 	return param
+}
+
+// Itob int to []byte
+func Itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
+}
+
+// ReflectFieldValue reflect struct field
+func ReflectFieldValue(data interface{}, fieldName string) reflect.Value {
+	var ptr reflect.Value
+	var value reflect.Value
+	value = reflect.ValueOf(data)
+
+	if value.Type().Kind() == reflect.Ptr {
+		ptr = value
+		value = ptr.Elem()
+	} else {
+		ptr = reflect.New(reflect.TypeOf(data))
+		temp := ptr.Elem()
+		temp.Set(value)
+		value = temp
+	}
+
+	return value.FieldByName(fieldName)
 }

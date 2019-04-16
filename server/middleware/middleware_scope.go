@@ -13,8 +13,8 @@ import (
 	"github.com/j75689/easybot/pkg/store"
 )
 
-// ScopeMiddleware handle valid api scope
-func ScopeMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.HandlerFunc {
+// UserScopeMiddleware handle valid api scope
+func UserScopeMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		if skipper != nil {
@@ -34,7 +34,7 @@ func ScopeMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.HandlerFun
 		if claimsOk && tokenOk {
 			tokenInfo = tokenObj.(*token.TokenInfo)
 			claims = claimsObj.(*claim.ServiceAccountClaims)
-			value, _ := (*db).Load(config.ServiceAccountTable, claims.Name)
+			value, _ := (*db).LoadWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": claims.Name})
 			var account model.ServiceAccount
 			if data, err := json.Marshal(value); err == nil {
 				json.Unmarshal(data, &account)

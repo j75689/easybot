@@ -3,18 +3,18 @@ package handler
 import (
 	"sync"
 
-	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/model"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
 type UnfollowHandler struct {
 	BaseHandler
 	Event  linebot.EventType
-	Config *config.MessageHandlerConfig
+	Config *model.MessageHandlerConfig
 }
 
-func (h *UnfollowHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err error) {
-	h.DeregisterConfig(cfg.ID)
+func (h *UnfollowHandler) RegisterConfig(cfg *model.MessageHandlerConfig) (err error) {
+	h.DeregisterConfig(cfg.ConfigID)
 
 	h.BaseHandler.RegisterConfig(cfg)
 	h.Config = cfg
@@ -23,7 +23,7 @@ func (h *UnfollowHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err 
 
 func (h *UnfollowHandler) DeregisterConfig(id string) (err error) {
 	if h.Config != nil {
-		if id == h.Config.ID {
+		if id == h.Config.ConfigID {
 			h.Config = nil
 		}
 		err = h.BaseHandler.DeregisterConfig(id)
@@ -32,7 +32,7 @@ func (h *UnfollowHandler) DeregisterConfig(id string) (err error) {
 	return
 }
 
-func (h *UnfollowHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage, err error) {
+func (h *UnfollowHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *CustomMessage, err error) {
 	reply, err = h.BaseHandler.Run(event, variables)
 
 	if h.Config != nil && reply == nil {
@@ -41,8 +41,8 @@ func (h *UnfollowHandler) Run(event *linebot.Event, variables map[string]interfa
 			variables[k] = v
 		}
 		var replyStr string
-		replyStr, err = h.runStage(h.Config.ID, 0, h.Config.Stage, variables)
-		reply = &config.CustomMessage{
+		replyStr, err = h.runStage(h.Config.ConfigID, 0, h.Config.Stage, variables)
+		reply = &CustomMessage{
 			Msg: replyStr,
 		}
 	}

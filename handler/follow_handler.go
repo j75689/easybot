@@ -3,18 +3,18 @@ package handler
 import (
 	"sync"
 
-	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/model"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
 type FollowHandler struct {
 	BaseHandler
 	Event  linebot.EventType
-	Config *config.MessageHandlerConfig
+	Config *model.MessageHandlerConfig
 }
 
-func (h *FollowHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err error) {
-	h.DeregisterConfig(cfg.ID)
+func (h *FollowHandler) RegisterConfig(cfg *model.MessageHandlerConfig) (err error) {
+	h.DeregisterConfig(cfg.ConfigID)
 
 	err = h.BaseHandler.RegisterConfig(cfg)
 	h.Config = cfg
@@ -23,7 +23,7 @@ func (h *FollowHandler) RegisterConfig(cfg *config.MessageHandlerConfig) (err er
 
 func (h *FollowHandler) DeregisterConfig(id string) (err error) {
 	if h.Config != nil {
-		if id == h.Config.ID {
+		if id == h.Config.ConfigID {
 			h.Config = nil
 		}
 		err = h.BaseHandler.DeregisterConfig(id)
@@ -32,7 +32,7 @@ func (h *FollowHandler) DeregisterConfig(id string) (err error) {
 	return
 }
 
-func (h *FollowHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *config.CustomMessage, err error) {
+func (h *FollowHandler) Run(event *linebot.Event, variables map[string]interface{}) (reply *CustomMessage, err error) {
 
 	reply, err = h.BaseHandler.Run(event, variables)
 
@@ -42,8 +42,8 @@ func (h *FollowHandler) Run(event *linebot.Event, variables map[string]interface
 			variables[k] = v
 		}
 		var replyStr string
-		replyStr, err = h.runStage(h.Config.ID, 0, h.Config.Stage, variables)
-		reply = &config.CustomMessage{
+		replyStr, err = h.runStage(h.Config.ConfigID, 0, h.Config.Stage, variables)
+		reply = &CustomMessage{
 			Msg: replyStr,
 		}
 	}

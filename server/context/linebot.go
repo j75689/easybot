@@ -7,7 +7,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
-	"github.com/j75689/easybot/config"
+	"github.com/j75689/easybot/handler"
 	messagehandler "github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/pkg/logger"
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -59,7 +59,7 @@ func HandlePushMessage(bot *linebot.Client) func(*gin.Context) {
 
 		if postdata, err = ioutil.ReadAll(c.Request.Body); err == nil {
 			logger.Info("[api] ", "push ", c.Param("userID"))
-			if _, err = bot.PushMessage(c.Param("userID"), &config.CustomMessage{Msg: string(postdata)}).Do(); err == nil {
+			if _, err = bot.PushMessage(c.Param("userID"), &handler.CustomMessage{Msg: string(postdata)}).Do(); err == nil {
 				c.JSON(http.StatusOK, gin.H{"success": true})
 				return
 			}
@@ -93,7 +93,7 @@ func HandleMulticastMessage(bot *linebot.Client) func(*gin.Context) {
 			if err = json.Unmarshal(postdata, &multicastBody); err == nil {
 				for _, data := range multicastBody.Message {
 					if msg, err := json.Marshal(data); err == nil {
-						Messages = append(Messages, &config.CustomMessage{Msg: string(msg)})
+						Messages = append(Messages, &handler.CustomMessage{Msg: string(msg)})
 					} else {
 						logger.Error("[api] ", "Muticast Cause Error: ", err)
 					}

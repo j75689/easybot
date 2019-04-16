@@ -15,6 +15,7 @@
     "react-dom": "latest",
     "react-router-dom": "^4.3.1",
     "react-scripts": "latest",
+    "react-virtualized": "^9.21.0",
     "recharts": "^1.5.0"
   },
   "homepage": "public/",

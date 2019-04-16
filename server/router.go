@@ -102,9 +102,9 @@ func registerAPIRouter(app *gin.Engine, handler *httphandler.WebhookHandler, bot
 	// middleware
 	skipper := middleware.AllowPathPrefixSkipper(
 		middleware.Prefix{Method: "Any", Path: "/api/v1/bot/hook"})
-	v1.Use(middleware.UserIptableMiddleware(&db, skipper))
 	v1.Use(middleware.UserAuthMiddleware(skipper))
-	v1.Use(middleware.ScopeMiddleware(&db, skipper))
+	v1.Use(middleware.UserIptableMiddleware(&db, skipper))
+	v1.Use(middleware.UserScopeMiddleware(&db, skipper))
 
 	// crud config
 	v1.GET("/config/:id", context.HandleGetConfig(&db))

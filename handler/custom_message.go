@@ -1,4 +1,4 @@
-package config
+package handler
 
 import (
 	"github.com/line/line-bot-sdk-go/linebot"

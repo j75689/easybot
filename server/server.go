@@ -6,12 +6,11 @@ import (
 	"os"
 
 	"github.com/j75689/easybot/auth"
+	"github.com/j75689/easybot/model"
 
 	"github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/plugin"
 	"go.uber.org/zap"
-
-	"github.com/j75689/easybot/config"
 
 	log "github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/store"
@@ -91,14 +90,14 @@ func initServer() {
 	}
 	logger.Info("[Init] ", "Load config")
 	// init config
-	if err = db.LoadAll("config", func(key string, value interface{}) {
+	if err = db.LoadAll("config", func(id string, value interface{}) {
 		if b, err := json.Marshal(value); err == nil {
-			var cfg config.MessageHandlerConfig
+			var cfg model.MessageHandlerConfig
 			if err = json.Unmarshal(b, &cfg); err == nil {
 				handler.RegisterConfig(&cfg)
-				logger.Infof("[Init] Register config [%s]", key)
+				logger.Infof("[Init] Register config [%v]", cfg.ConfigID)
 			} else {
-				logger.Errorf("[Init] Unmarshal config [%s] error: %v", key, err)
+				logger.Errorf("[Init] Unmarshal config id [%v] error: %v", id, err)
 			}
 		}
 	}); err != nil {

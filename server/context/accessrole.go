@@ -20,13 +20,13 @@ import (
 func HandleGetAllServiceAccount(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var accounts = []model.ServiceAccount{}
-		err := (*db).LoadAll(config.ServiceAccountTable, func(key string, value interface{}) {
+		err := (*db).LoadAll(config.ServiceAccountTable, func(id string, value interface{}) {
 			var account model.ServiceAccount
 			if data, err := json.Marshal(value); err == nil {
 				json.Unmarshal(data, &account)
 				accounts = append(accounts, account)
 			} else {
-				logger.Errorf("[dashboard] unmarshal account [%v] error [%v]", key, err)
+				logger.Errorf("[dashboard] unmarshal account [%v] error [%v]", id, err)
 			}
 		})
 		if err != nil {
@@ -47,7 +47,7 @@ func HandleGetServiceAccount(db *store.Storage) func(*gin.Context) {
 			account model.ServiceAccount
 			name    = c.Param("name")
 		)
-		value, err := (*db).Load(config.ServiceAccountTable, name)
+		value, err := (*db).LoadWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": name})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": "Account not found"})
 			return
@@ -75,7 +75,7 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 			scope     = c.DefaultPostForm("scope", "")
 		)
 		// Check Exist
-		if _, err := (*db).Load(config.ServiceAccountTable, name); err == nil {
+		if _, err := (*db).LoadWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": name}); err == nil {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": name + " is Existed"})
 			return
 		}
@@ -83,7 +83,7 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 		// Create New
 		active, _ = strconv.Atoi(activeStr)
 
-		account := &model.ServiceAccount{
+		account := model.ServiceAccount{
 			Name:     name,
 			EMail:    email,
 			Domain:   domain,
@@ -91,7 +91,7 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 			Active:   int64(active),
 			Scope:    scope,
 		}
-		token, err := auth.GenerateToken(account)
+		token, err := auth.GenerateToken(&account)
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 			return
@@ -100,7 +100,7 @@ func HandleCreateServiceAccount(db *store.Storage) func(*gin.Context) {
 		account.Token = token.AccessToken
 		account.Expired = token.Expire
 
-		if err := (*db).Save(config.ServiceAccountTable, name, account); err != nil {
+		if err := (*db).Save(config.ServiceAccountTable, &account); err != nil {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 			return
 		}
@@ -125,7 +125,7 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 			scope     = c.DefaultPostForm("scope", "")
 		)
 
-		value, err := (*db).Load(config.ServiceAccountTable, name)
+		value, err := (*db).LoadWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": name})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": "Account not found"})
 			return
@@ -150,10 +150,10 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 
 			// nmae changed
 			if name != newName {
-				(*db).Delete(config.ServiceAccountTable, name)
+				(*db).Delete(config.ServiceAccountTable, account.ID)
 			}
 
-			if err := (*db).Save(config.ServiceAccountTable, newName, account); err != nil {
+			if err := (*db).SaveWithFilter(config.ServiceAccountTable, &account, map[string]interface{}{"name": account.Name}); err != nil {
 				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 				return
 			}
@@ -181,7 +181,7 @@ func HandleBatchDeleteServiceAccount(db *store.Storage) func(*gin.Context) {
 		}
 
 		for _, account := range accounts {
-			err = (*db).Delete(config.ServiceAccountTable, account)
+			err = (*db).DeleteWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": account})
 			if err != nil {
 				logger.Error("[dashboard] delete account [%s] error [%v]", account, err.Error())
 			}
@@ -202,7 +202,7 @@ func HandleRefreshServiceAccountToken(db *store.Storage) func(*gin.Context) {
 			tokenInfo *token.TokenInfo
 			account   model.ServiceAccount
 		)
-		value, _ := (*db).Load(config.ServiceAccountTable, name)
+		value, _ := (*db).LoadWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": name})
 
 		if data, err := json.Marshal(value); err == nil {
 			json.Unmarshal(data, &account)
@@ -215,7 +215,7 @@ func HandleRefreshServiceAccountToken(db *store.Storage) func(*gin.Context) {
 			// Save
 			account.Token = tokenInfo.AccessToken
 			account.Expired = tokenInfo.Expire
-			if err := (*db).Save(config.ServiceAccountTable, name, account); err != nil {
+			if err := (*db).SaveWithFilter(config.ServiceAccountTable, &account, map[string]interface{}{"name": account.Name}); err != nil {
 				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 				return
 			}

@@ -10,14 +10,15 @@ import (
 )
 
 // Iptables accessible ips
-type Iptables struct {
+type Iptable struct {
+	ID    string   `json:"-" bson:"_id"`
 	Type  string   `json:"type" bson:"type"` // allow, deny
 	IP    []string `json:"ip" bson:"ip"`
 	Scope string   `json:"scope" bson:"scope"`
 }
 
 // Pass check clientIP
-func (iptable *Iptables) Pass(clientIP string) bool {
+func (iptable *Iptable) Pass(clientIP string) bool {
 
 	var preset bool
 	switch iptable.Type {

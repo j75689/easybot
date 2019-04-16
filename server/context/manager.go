@@ -5,7 +5,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/j75689/easybot/model"
+
 	"github.com/fatih/structs"
+	"github.com/j75689/easybot/config"
 	messagehandler "github.com/j75689/easybot/handler"
 	"github.com/j75689/easybot/pkg/logger"
 	"github.com/j75689/easybot/pkg/store"
@@ -14,18 +17,17 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot"
 
 	"github.com/gin-gonic/gin"
-	"github.com/j75689/easybot/config"
 )
 
 // HandleGetAllConfigID process get all config id
 func HandleGetAllConfigID(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var configIDs = make(map[string][]string)
-		if err := (*db).LoadAll(config.MessageHandlerConfigTable, func(key string, value interface{}) {
-			var messageConfig config.MessageHandlerConfig
+		if err := (*db).LoadAll(config.MessageHandlerConfigTable, func(id string, value interface{}) {
+			var messageConfig model.MessageHandlerConfig
 			b, _ := json.Marshal(value)
 			if err := json.Unmarshal(b, &messageConfig); err == nil {
-				configIDs[messageConfig.EventType] = append(configIDs[messageConfig.EventType], messageConfig.ID)
+				configIDs[messageConfig.EventType] = append(configIDs[messageConfig.EventType], messageConfig.ConfigID)
 			}
 
 		}); err != nil {
@@ -39,8 +41,8 @@ func HandleGetAllConfigID(db *store.Storage) func(*gin.Context) {
 func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 
-		if data, err := (*db).Load(config.MessageHandlerConfigTable, c.Param("id")); err == nil {
-			var messageConfig config.MessageHandlerConfig
+		if data, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": c.Param("id")}); err == nil {
+			var messageConfig model.MessageHandlerConfig
 			b, _ := json.Marshal(data)
 			json.Unmarshal(b, &messageConfig)
 			c.JSON(200, messageConfig)
@@ -54,22 +56,22 @@ func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 func HandleCreateConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var configID = c.Param("id")
-		if _, err := (*db).Load(config.MessageHandlerConfigTable, configID); err == nil {
+		if _, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": configID}); err == nil {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": configID + " already exist"})
 			return
 		}
 
 		if configData, err := c.GetRawData(); err == nil {
-			var messageConfig config.MessageHandlerConfig
+			var messageConfig model.MessageHandlerConfig
 			if err = json.Unmarshal(configData, &messageConfig); err == nil {
-				if configID != messageConfig.ID {
+				if configID != messageConfig.ConfigID {
 					c.JSON(http.StatusOK, gin.H{"success": false, "error": "ConfigID not match"})
 					return
 				}
-				if err = (*db).Save(config.MessageHandlerConfigTable, messageConfig.ID, messageConfig); err != nil {
-					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ID, err.Error())
+				if err = (*db).Save(config.MessageHandlerConfigTable, &messageConfig); err != nil {
+					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ConfigID, err.Error())
 				} else {
-					logger.Infof("[dashboard] Register config [%s]", messageConfig.ID)
+					logger.Infof("[dashboard] Register config [%s]", messageConfig.ConfigID)
 					messagehandler.RegisterConfig(&messageConfig)
 					c.JSON(200, gin.H{"success": true})
 				}
@@ -89,16 +91,16 @@ func HandleSaveConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var configID = c.Param("id")
 		if configData, err := c.GetRawData(); err == nil {
-			var messageConfig config.MessageHandlerConfig
+			var messageConfig model.MessageHandlerConfig
 			if err = json.Unmarshal(configData, &messageConfig); err == nil {
-				if configID != messageConfig.ID {
+				if configID != messageConfig.ConfigID {
 					c.JSON(http.StatusOK, gin.H{"success": false, "error": "ConfigID not match"})
 					return
 				}
-				if err = (*db).Save(config.MessageHandlerConfigTable, messageConfig.ID, messageConfig); err != nil {
-					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ID, err.Error())
+				if err = (*db).SaveWithFilter(config.MessageHandlerConfigTable, &messageConfig, map[string]interface{}{"id": messageConfig.ConfigID}); err != nil {
+					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ConfigID, err.Error())
 				} else {
-					logger.Infof("[dashboard] Register config [%s]", messageConfig.ID)
+					logger.Infof("[dashboard] Register config [%s]", messageConfig.ConfigID)
 					messagehandler.RegisterConfig(&messageConfig)
 					c.JSON(200, gin.H{"success": true})
 				}
@@ -118,13 +120,13 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 		var (
 			configID = c.Param("id")
 		)
-		if data, err := (*db).Load(config.MessageHandlerConfigTable, configID); err == nil {
-			var messageConfig config.MessageHandlerConfig
+		if data, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": configID}); err == nil {
+			var messageConfig model.MessageHandlerConfig
 			if b, err := json.Marshal(data); err == nil {
 				if err = json.Unmarshal(b, &messageConfig); err != nil {
 					logger.Error("[dashboard] ", err.Error())
 				} else {
-					logger.Infof("[dashboard] Deregister config [%s]", messageConfig.ID)
+					logger.Infof("[dashboard] Deregister config [%s]", messageConfig.ConfigID)
 					if err = messagehandler.DeregisterConfig(&messageConfig); err != nil {
 						logger.Error("[dashboard] ", err.Error())
 					}
@@ -135,7 +137,7 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 			return
 		}
-		if err := (*db).Delete("config", configID); err != nil {
+		if err := (*db).DeleteWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": configID}); err != nil {
 			logger.Errorf("[dashboard] Delete config [%s] error: %s", configID, err.Error())
 			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 		} else {

@@ -15,12 +15,14 @@ type Connection struct {
 
 // Storage interface
 type Storage interface {
-	Save(collection, key string, data interface{}) error
-	LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(key string, value interface{})) error
+	SaveWithFilter(collection string, data interface{}, filter map[string]interface{}) error
+	Save(collection string, data interface{}) error
+	LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(id string, value interface{})) error
 	LoadWithFilter(collection string, filter map[string]interface{}) (interface{}, error)
-	Load(collection, key string) (interface{}, error)
-	LoadAll(collection string, callback func(key string, value interface{})) error
-	Delete(collection, key string) error
+	Load(collection string, id string) (interface{}, error)
+	LoadAll(collection string, callback func(id string, value interface{})) error
+	DeleteWithFilter(collection string, filter map[string]interface{}) error
+	Delete(collection string, id string) error
 	Connect(conn *Connection, args ...interface{}) error
 	Close() error
 }
