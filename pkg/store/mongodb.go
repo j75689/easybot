@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -29,7 +30,7 @@ func (db *MongoDB) SaveWithFilter(collection string, data interface{}, filter ma
 		{"$set", data},
 	}
 	v := util.ReflectFieldValue(data, "ID")
-	db.LoadAllWithFilter(collection, filter, func(id string, value interface{}) {
+	db.LoadAllWithFilter(collection, filter, func(id string, value []byte) {
 		v.SetString(id)
 		var result *mongo.UpdateResult
 		result, err = coll.UpdateMany(ctx, filter, update)
@@ -52,7 +53,7 @@ func (db *MongoDB) Save(collection string, data interface{}) (err error) {
 	id := v.String()
 
 	if id == "" {
-		v.SetString(primitive.NewObjectID().String())
+		v.SetString(primitive.NewObjectID().Hex())
 		_, err = coll.InsertOne(ctx, data)
 	} else {
 		filter := bson.M{"_id": id}
@@ -65,7 +66,7 @@ func (db *MongoDB) Save(collection string, data interface{}) (err error) {
 	return
 }
 
-func (db *MongoDB) LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(id string, value interface{})) (err error) {
+func (db *MongoDB) LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(id string, value []byte)) (err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
@@ -81,26 +82,34 @@ func (db *MongoDB) LoadAllWithFilter(collection string, filter map[string]interf
 			continue
 		}
 		objectID := result["_id"]
-		data := result
-		if objectID != nil && data != nil {
-			callback(objectID.(string), result)
+		result["id"] = objectID
+		if objectID != nil && result != nil {
+			data, err := json.Marshal(result)
+			if err != nil {
+				continue
+			}
+			callback(objectID.(string), data)
 		}
 	}
 	err = cur.Err()
 	return
 }
 
-func (db *MongoDB) LoadWithFilter(collection string, filter map[string]interface{}) (data interface{}, err error) {
+func (db *MongoDB) LoadWithFilter(collection string, filter map[string]interface{}) (data []byte, err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	var d map[string]interface{}
 	err = coll.FindOne(ctx, filter).Decode(&d)
-
-	return d, err
+	if err != nil {
+		return
+	}
+	d["id"] = d["_id"]
+	data, err = json.Marshal(d)
+	return
 }
 
-func (db *MongoDB) LoadAll(collection string, callback func(id string, value interface{})) (err error) {
+func (db *MongoDB) LoadAll(collection string, callback func(id string, value []byte)) (err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	cur, err := coll.Find(ctx, bson.D{})
@@ -116,24 +125,32 @@ func (db *MongoDB) LoadAll(collection string, callback func(id string, value int
 			continue
 		}
 		objectID := result["_id"]
-		data := result
-		if objectID != nil && data != nil {
-			callback(objectID.(string), result)
+		result["id"] = objectID
+		if objectID != nil && result != nil {
+			data, err := json.Marshal(result)
+			if err != nil {
+				continue
+			}
+			callback(objectID.(string), data)
 		}
 	}
 	err = cur.Err()
 	return
 }
 
-func (db *MongoDB) Load(collection string, id string) (data interface{}, err error) {
+func (db *MongoDB) Load(collection string, id string) (data []byte, err error) {
 	coll := db.instance.Database(db.info.DBName).Collection(collection)
 
 	filter := bson.M{"_id": id}
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	var d map[string]interface{}
 	err = coll.FindOne(ctx, filter).Decode(&d)
-
-	return d, err
+	if err != nil {
+		return
+	}
+	d["id"] = d["_id"]
+	data, err = json.Marshal(d)
+	return
 }
 
 func (db *MongoDB) DeleteWithFilter(collection string, filter map[string]interface{}) (err error) {

@@ -1,5 +1,5 @@
 {
-  "id": "FollowExample",
+  "configId": "FollowExample",
   "eventType": "follow",
   "defaultValues": {
     "repo": "https://github.com/j75689/easybot"

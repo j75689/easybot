@@ -17,15 +17,10 @@ func HandleGetIptables(db *store.Storage) func(*gin.Context) {
 
 		var iptables = []*model.Iptable{}
 
-		(*db).LoadAll(config.IpTable, func(id string, value interface{}) {
+		(*db).LoadAll(config.IpTable, func(id string, value []byte) {
 
 			var iptable model.Iptable
-			data, err := json.Marshal(value)
-			if err != nil {
-				logger.Warnf("[dashboard] get Iptable id:%v err:%v", id, err)
-				return
-			}
-			err = json.Unmarshal(data, &iptable)
+			err := json.Unmarshal(value, &iptable)
 			if err != nil {
 				logger.Warnf("[dashboard] get Iptable id:%v err:%v", id, err)
 				return
@@ -50,12 +45,7 @@ func HandleGetIptable(db *store.Storage) func(*gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 			return
 		}
-		data, err := json.Marshal(value)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
-			return
-		}
-		err = json.Unmarshal(data, &iptable)
+		err = json.Unmarshal(value, &iptable)
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 			return

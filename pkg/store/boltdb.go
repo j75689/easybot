@@ -10,7 +10,6 @@ import (
 
 	"github.com/j75689/easybot/pkg/util"
 
-	"github.com/j75689/easybot/pkg/logger"
 	"go.etcd.io/bbolt"
 )
 
@@ -78,7 +77,7 @@ func (db *BoltDB) Save(collection string, data interface{}) (err error) {
 	return
 }
 
-func (db *BoltDB) LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(id string, value interface{})) (err error) {
+func (db *BoltDB) LoadAllWithFilter(collection string, filter map[string]interface{}, callback func(id string, value []byte)) (err error) {
 	err = db.instance.Batch(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
@@ -89,12 +88,7 @@ func (db *BoltDB) LoadAllWithFilter(collection string, filter map[string]interfa
 			for filterKey, filterValue := range filter {
 				filterString := fmt.Sprintf("\"%v\":\"%v\"", filterKey, filterValue)
 				if bytes.Index(v, []byte(filterString)) > -1 {
-					var (
-						data interface{}
-					)
-					if err = json.Unmarshal(v, &data); err == nil {
-						callback(string(k), data)
-					}
+					callback(string(k), v)
 				}
 			}
 		}
@@ -104,7 +98,7 @@ func (db *BoltDB) LoadAllWithFilter(collection string, filter map[string]interfa
 	return
 }
 
-func (db *BoltDB) LoadWithFilter(collection string, filter map[string]interface{}) (data interface{}, err error) {
+func (db *BoltDB) LoadWithFilter(collection string, filter map[string]interface{}) (data []byte, err error) {
 	err = db.instance.Batch(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
@@ -115,11 +109,7 @@ func (db *BoltDB) LoadWithFilter(collection string, filter map[string]interface{
 			for filterKey, filterValue := range filter {
 				filterString := fmt.Sprintf("\"%v\":\"%v\"", filterKey, filterValue)
 				if bytes.Index(v, []byte(filterString)) > -1 {
-					if err = json.Unmarshal(v, &data); err == nil {
-						break
-					} else {
-						logger.Error("db loawithfilter ", err)
-					}
+					data = v
 				}
 			}
 		}
@@ -131,19 +121,14 @@ func (db *BoltDB) LoadWithFilter(collection string, filter map[string]interface{
 	return
 }
 
-func (db *BoltDB) LoadAll(collection string, callback func(id string, value interface{})) (err error) {
+func (db *BoltDB) LoadAll(collection string, callback func(id string, value []byte)) (err error) {
 	err = db.instance.Batch(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
 			return err
 		}
 		err = b.ForEach(func(k, v []byte) (err error) {
-			var (
-				data interface{}
-			)
-			if err = json.Unmarshal(v, &data); err == nil {
-				callback(string(k), data)
-			}
+			callback(string(k), v)
 			return
 		})
 
@@ -152,20 +137,18 @@ func (db *BoltDB) LoadAll(collection string, callback func(id string, value inte
 	return
 }
 
-func (db *BoltDB) Load(collection string, id string) (data interface{}, err error) {
+func (db *BoltDB) Load(collection string, id string) (data []byte, err error) {
 
 	err = db.instance.Batch(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(collection))
 		if err != nil {
 			return err
 		}
-		v := b.Get([]byte(id))
-		if v != nil {
-			json.Unmarshal(v, &data)
-		} else {
-			return fmt.Errorf("data [%v] not found.", id)
+		data = b.Get([]byte(id))
+		if data == nil {
+			err = fmt.Errorf("data [%v] not found.", id)
 		}
-		return nil
+		return err
 	})
 
 	return

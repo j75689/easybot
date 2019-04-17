@@ -36,8 +36,7 @@ func UserScopeMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.Handle
 			claims = claimsObj.(*claim.ServiceAccountClaims)
 			value, _ := (*db).LoadWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": claims.Name})
 			var account model.ServiceAccount
-			if data, err := json.Marshal(value); err == nil {
-				json.Unmarshal(data, &account)
+			if err := json.Unmarshal(value, &account); err == nil {
 				// Verify Account Info
 				if account.ValidInfo(tokenInfo, claims) {
 					// Verify Scope

@@ -23,13 +23,11 @@ import (
 func HandleGetAllConfigID(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var configIDs = make(map[string][]string)
-		if err := (*db).LoadAll(config.MessageHandlerConfigTable, func(id string, value interface{}) {
+		if err := (*db).LoadAll(config.MessageHandlerConfigTable, func(id string, value []byte) {
 			var messageConfig model.MessageHandlerConfig
-			b, _ := json.Marshal(value)
-			if err := json.Unmarshal(b, &messageConfig); err == nil {
+			if err := json.Unmarshal(value, &messageConfig); err == nil {
 				configIDs[messageConfig.EventType] = append(configIDs[messageConfig.EventType], messageConfig.ConfigID)
 			}
-
 		}); err != nil {
 			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 		}
@@ -41,10 +39,9 @@ func HandleGetAllConfigID(db *store.Storage) func(*gin.Context) {
 func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 
-		if data, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": c.Param("id")}); err == nil {
+		if data, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"configId": c.Param("id")}); err == nil {
 			var messageConfig model.MessageHandlerConfig
-			b, _ := json.Marshal(data)
-			json.Unmarshal(b, &messageConfig)
+			json.Unmarshal(data, &messageConfig)
 			c.JSON(200, messageConfig)
 		} else {
 			c.JSON(200, gin.H{"success": false, "error": err.Error()})
@@ -56,7 +53,8 @@ func HandleGetConfig(db *store.Storage) func(*gin.Context) {
 func HandleCreateConfig(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var configID = c.Param("id")
-		if _, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": configID}); err == nil {
+		if value, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"configId": configID}); err == nil {
+			logger.Warn("[dashboard] create config already exist:", string(value))
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": configID + " already exist"})
 			return
 		}
@@ -97,7 +95,7 @@ func HandleSaveConfig(db *store.Storage) func(*gin.Context) {
 					c.JSON(http.StatusOK, gin.H{"success": false, "error": "ConfigID not match"})
 					return
 				}
-				if err = (*db).SaveWithFilter(config.MessageHandlerConfigTable, &messageConfig, map[string]interface{}{"id": messageConfig.ConfigID}); err != nil {
+				if err = (*db).SaveWithFilter(config.MessageHandlerConfigTable, &messageConfig, map[string]interface{}{"configId": messageConfig.ConfigID}); err != nil {
 					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ConfigID, err.Error())
 				} else {
 					logger.Infof("[dashboard] Register config [%s]", messageConfig.ConfigID)
@@ -120,16 +118,14 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 		var (
 			configID = c.Param("id")
 		)
-		if data, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": configID}); err == nil {
+		if data, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"configId": configID}); err == nil {
 			var messageConfig model.MessageHandlerConfig
-			if b, err := json.Marshal(data); err == nil {
-				if err = json.Unmarshal(b, &messageConfig); err != nil {
+			if err = json.Unmarshal(data, &messageConfig); err != nil {
+				logger.Error("[dashboard] ", err.Error())
+			} else {
+				logger.Infof("[dashboard] Deregister config [%s]", messageConfig.ConfigID)
+				if err = messagehandler.DeregisterConfig(&messageConfig); err != nil {
 					logger.Error("[dashboard] ", err.Error())
-				} else {
-					logger.Infof("[dashboard] Deregister config [%s]", messageConfig.ConfigID)
-					if err = messagehandler.DeregisterConfig(&messageConfig); err != nil {
-						logger.Error("[dashboard] ", err.Error())
-					}
 				}
 			}
 
@@ -137,7 +133,7 @@ func HandleDeleteConfig(db *store.Storage) func(*gin.Context) {
 			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 			return
 		}
-		if err := (*db).DeleteWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"id": configID}); err != nil {
+		if err := (*db).DeleteWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"configId": configID}); err != nil {
 			logger.Errorf("[dashboard] Delete config [%s] error: %s", configID, err.Error())
 			c.JSON(200, gin.H{"success": false, "error": err.Error()})
 		} else {

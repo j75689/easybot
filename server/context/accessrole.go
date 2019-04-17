@@ -20,14 +20,11 @@ import (
 func HandleGetAllServiceAccount(db *store.Storage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var accounts = []model.ServiceAccount{}
-		err := (*db).LoadAll(config.ServiceAccountTable, func(id string, value interface{}) {
+		err := (*db).LoadAll(config.ServiceAccountTable, func(id string, value []byte) {
 			var account model.ServiceAccount
-			if data, err := json.Marshal(value); err == nil {
-				json.Unmarshal(data, &account)
-				accounts = append(accounts, account)
-			} else {
-				logger.Errorf("[dashboard] unmarshal account [%v] error [%v]", id, err)
-			}
+			json.Unmarshal(value, &account)
+			accounts = append(accounts, account)
+
 		})
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
@@ -52,8 +49,7 @@ func HandleGetServiceAccount(db *store.Storage) func(*gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": "Account not found"})
 			return
 		}
-		if data, err := json.Marshal(value); err == nil {
-			json.Unmarshal(data, &account)
+		if err := json.Unmarshal(value, &account); err == nil {
 			c.JSON(http.StatusOK, account)
 		} else {
 			logger.Errorf("[dashboard] unmarshal account [%v] error [%v]", name, err)
@@ -130,9 +126,8 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"success": false, "error": "Account not found"})
 			return
 		}
-		if data, err := json.Marshal(value); err == nil {
+		if err := json.Unmarshal(value, &account); err == nil {
 			active, _ = strconv.Atoi(activeStr)
-			json.Unmarshal(data, &account)
 			account.Name = newName
 			account.EMail = email
 			account.Domain = domain
@@ -153,7 +148,7 @@ func HandleSaveServiceAccount(db *store.Storage) func(*gin.Context) {
 				(*db).Delete(config.ServiceAccountTable, account.ID)
 			}
 
-			if err := (*db).SaveWithFilter(config.ServiceAccountTable, &account, map[string]interface{}{"name": account.Name}); err != nil {
+			if err := (*db).SaveWithFilter(config.ServiceAccountTable, &account, map[string]interface{}{"name": name}); err != nil {
 				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})
 				return
 			}
@@ -204,8 +199,7 @@ func HandleRefreshServiceAccountToken(db *store.Storage) func(*gin.Context) {
 		)
 		value, _ := (*db).LoadWithFilter(config.ServiceAccountTable, map[string]interface{}{"name": name})
 
-		if data, err := json.Marshal(value); err == nil {
-			json.Unmarshal(data, &account)
+		if err := json.Unmarshal(value, &account); err == nil {
 			tokenInfo, err = auth.GenerateToken(&account)
 			if err != nil {
 				c.JSON(http.StatusOK, gin.H{"success": false, "error": err.Error()})

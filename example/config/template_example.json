@@ -1,5 +1,5 @@
 {
-  "id": "TemplateExample",
+  "configId": "TemplateExample",
   "eventType": "message",
   "messagetype": "text",
   "defaultValues": {

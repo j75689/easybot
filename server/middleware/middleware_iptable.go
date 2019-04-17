@@ -28,15 +28,9 @@ func UserIptableMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.Hand
 		// Check By Scope
 		if scope, ok := config.Scope.FindScopeByPath(c.Request.URL.Path); ok {
 			err := (*db).LoadAllWithFilter(config.IpTable, map[string]interface{}{"scope": scope},
-				func(id string, value interface{}) {
+				func(id string, value []byte) {
 					var iptable model.Iptable
-					data, err := json.Marshal(value)
-					if err != nil {
-						logger.Warnf("[iptable] id:%v err:%v", id, err)
-						return
-					}
-					err = json.Unmarshal(data, &iptable)
-					if err != nil {
+					if err := json.Unmarshal(value, &iptable); err != nil {
 						logger.Warnf("[iptable] id:%v err:%v", id, err)
 						return
 					}
@@ -51,14 +45,10 @@ func UserIptableMiddleware(db *store.Storage, skipper RouteSkipperFunc) gin.Hand
 		// Check All
 		{
 			err := (*db).LoadAllWithFilter(config.IpTable, map[string]interface{}{"scope": "all"},
-				func(id string, value interface{}) {
+				func(id string, value []byte) {
 					var iptable model.Iptable
-					data, err := json.Marshal(value)
-					if err != nil {
-						logger.Warnf("[iptable] id:%v err:%v", id, err)
-						return
-					}
-					err = json.Unmarshal(data, &iptable)
+
+					err := json.Unmarshal(value, &iptable)
 					if err != nil {
 						logger.Warnf("[iptable] id:%v err:%v", id, err)
 						return

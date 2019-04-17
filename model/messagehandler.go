@@ -3,7 +3,7 @@ package model
 // MessageHandlerConfig 處理傳入訊息的設定
 type MessageHandlerConfig struct {
 	ID            string                 `json:"-" bson:"_id"`
-	ConfigID      string                 `json:"id" bson:"id"`
+	ConfigID      string                 `json:"configId" bson:"configId"`
 	EventType     string                 `json:"eventType" bson:"eventType"`
 	MessageType   string                 `json:"messagetype,omitempty" bson:"messagetype,omitempty"`
 	DefaultValues map[string]interface{} `json:"defaultValues" bson:"defaultValues"`

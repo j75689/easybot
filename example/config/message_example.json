@@ -1,5 +1,5 @@
 {
-  "id": "MessageExample",
+  "configId": "MessageExample",
   "eventType": "message",
   "messageType": "text",
   "match": ["Hello", "hello", "Hello!", "hello!"],

@@ -90,15 +90,13 @@ func initServer() {
 	}
 	logger.Info("[Init] ", "Load config")
 	// init config
-	if err = db.LoadAll("config", func(id string, value interface{}) {
-		if b, err := json.Marshal(value); err == nil {
-			var cfg model.MessageHandlerConfig
-			if err = json.Unmarshal(b, &cfg); err == nil {
-				handler.RegisterConfig(&cfg)
-				logger.Infof("[Init] Register config [%v]", cfg.ConfigID)
-			} else {
-				logger.Errorf("[Init] Unmarshal config id [%v] error: %v", id, err)
-			}
+	if err = db.LoadAll("config", func(id string, value []byte) {
+		var cfg model.MessageHandlerConfig
+		if err = json.Unmarshal(value, &cfg); err == nil {
+			handler.RegisterConfig(&cfg)
+			logger.Infof("[Init] Register config [%v]", cfg.ConfigID)
+		} else {
+			logger.Errorf("[Init] Unmarshal config id [%v] error: %v", id, err)
 		}
 	}); err != nil {
 		logger.Error("[Init] ", err)
