@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/GeertJohan/go.rice v1.0.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fatih/structs v1.1.0
 	github.com/foolin/gin-template v0.0.0-20180515083052-089e62d1d723
 	github.com/gin-contrib/sessions v0.0.0-20190226023029-1532893d996f
