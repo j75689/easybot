@@ -45,20 +45,25 @@ func ReplaceVariables(reply string, variables map[string]interface{}) string {
 	for _, match := range r.FindAllStringSubmatch(reply, -1) {
 		var (
 			handleURLEncode = false
+			value           string
 		)
 		if strings.HasPrefix(match[1], "##URL##:") {
 			match[1] = match[1][8:len(match[1])]
 			handleURLEncode = true
 		}
 
+		// find variable
 		if v := GetJSONValue(match[1], variables); v != nil {
-			val := fmt.Sprintf("%v", v)
-			if handleURLEncode {
-				val = url.QueryEscape(val)
-			}
-			reply = strings.Replace(reply, match[0], val, -1)
-
+			value = fmt.Sprintf("%v", v)
+		} else {
+			value = match[1]
 		}
+		// URLEncode
+		if handleURLEncode {
+			value = url.QueryEscape(value)
+		}
+		// replace
+		reply = strings.Replace(reply, match[0], value, -1)
 	}
 
 	return reply
