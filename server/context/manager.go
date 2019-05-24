@@ -98,6 +98,20 @@ func HandleSaveConfig(db *store.Storage) func(*gin.Context) {
 				if err = (*db).SaveWithFilter(config.MessageHandlerConfigTable, &messageConfig, map[string]interface{}{"configId": messageConfig.ConfigID}); err != nil {
 					logger.Errorf("[dashboard] Save config [%s] error: %s", messageConfig.ConfigID, err.Error())
 				} else {
+					// deregister old config
+					if data, err := (*db).LoadWithFilter(config.MessageHandlerConfigTable, map[string]interface{}{"configId": configID}); err == nil {
+						var messageConfig model.MessageHandlerConfig
+						if err = json.Unmarshal(data, &messageConfig); err != nil {
+							logger.Error("[dashboard] ", err.Error())
+						} else {
+							logger.Infof("[dashboard] Deregister config [%s]", messageConfig.ConfigID)
+							if err = messagehandler.DeregisterConfig(&messageConfig); err != nil {
+								logger.Error("[dashboard] ", err.Error())
+							}
+						}
+
+					}
+					// register new one
 					logger.Infof("[dashboard] Register config [%s]", messageConfig.ConfigID)
 					messagehandler.RegisterConfig(&messageConfig)
 					c.JSON(200, gin.H{"success": true})
