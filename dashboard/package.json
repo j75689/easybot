@@ -16,19 +16,23 @@
     "react-router-dom": "^4.3.1",
     "react-scripts": "latest",
     "react-virtualized": "^9.21.0",
-    "recharts": "^1.5.0"
+    "recharts": "^1.5.0",
+    "snyk": "^1.316.1"
   },
   "homepage": "public/",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "browserslist": [
     ">0.2%",
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "snyk": true
 }
