@@ -27,8 +27,7 @@ require (
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
-	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c // indirect
-	golang.org/x/text v0.3.0 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 
 )
